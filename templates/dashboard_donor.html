@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Dashboard | Plentiq{% endblock %}
+
+{% block content %}
+<section class="hero-banner hero-donor">
+    <h2>🌿 Food Donor Management Portal</h2>
+    <p>Logged in as: <strong>{{ current_user.name }}</strong> ({{ current_user.email }})</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('donations') }}" class="btn btn-secondary">➕ Add Food Donation</a>
+        <a href="{{ url_for('listings') }}" class="btn btn-secondary">🍲 Community Listings</a>
+    </div>
+</section>
+
+{# Donor Metrics #}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-data">
+            <div class="stat-number">{{ stats.total_listings }}</div>
+            <div class="stat-label">My Total Listings</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">✨</div>
+        <div class="stat-data">
+            <div class="stat-number">{{ stats.active_listings }}</div>
+            <div class="stat-label">Active / Available</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🍲</div>
+        <div class="stat-data">
+            <div class="stat-number">{{ stats.total_quantity }}</div>
+            <div class="stat-label">Total Portions Donated</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🔔</div>
+        <div class="stat-data">
+            <div class="stat-number">{{ incoming_requests|selectattr('request_status', 'equalto', 'pending')|list|length }}</div>
+            <div class="stat-label">Pending Requests</div>
+        </div>
+    </div>
+</div>
+
+{# Incoming Food Requests Section #}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Incoming NGO Donation Requests</h2>
+            <p>Review and safely allocate surplus food requests from certified NGOs</p>
+        </div>
+        <span class="field-hint">Total: {{ incoming_requests|length }} requests</span>
+    </div>
+
+    {% if incoming_requests %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-id">Req ID</th>
+                        <th>Food Item</th>
+                        <th>Requesting NGO</th>
+                        <th class="col-qty">Requested</th>
+                        <th class="col-qty">Available</th>
+                        <th class="col-date">Date Requested</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-action">Review Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in incoming_requests %}
+                    <tr>
+                        <td class="col-id">#{{ req.request_id }}</td>
+                        <td>
+                            <strong>{{ req.food_name }}</strong>
+                            <div style="font-size: 11px; color: var(--text-muted);">Listing #{{ req.listing_id }}</div>
+                        </td>
+                        <td>
+                            <strong>{{ req.ngo_name }}</strong>
+                            <div style="font-size: 12px; color: var(--text-secondary);">{{ req.ngo_email }}</div>
+                        </td>
+                        <td class="col-qty">
+                            <strong style="color: var(--primary);">{{ req.requested_quantity }}</strong> {{ req.unit }}
+                        </td>
+                        <td class="col-qty">
+                            <strong>{{ req.quantity_available }}</strong> {{ req.unit }}
+                        </td>
+                        <td class="col-date">{{ req.requested_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        <td class="col-status">
+                            <span class="status-badge status-{{ req.request_status }}">
+                                {{ req.request_status }}
+                            </span>
+                        </td>
+                        <td class="col-action">
+                            {% if req.request_status == 'pending' %}
+                                {% set is_expired = (req.expiry_at <= now or req.listing_status == 'expired') %}
+                                {% set is_fully_allocated = (req.listing_status == 'fully_allocated' or req.quantity_available <= 0) %}
+                                {% set is_cancelled = (req.listing_status == 'cancelled') %}
+                                {% set is_insufficient_qty = (req.requested_quantity > req.quantity_available) %}
+                                {% set can_approve = (not is_expired and not is_fully_allocated and not is_cancelled and not is_insufficient_qty) %}
+
+                                <div class="action-cell-stack">
+                                    {% if can_approve %}
+                                        <form method="POST" action="{{ url_for('approve_request', request_id=req.request_id) }}" class="approval-form">
+                                            <input type="text" name="remarks" placeholder="Notes (optional)" class="input-remarks">
+                                            <button type="submit" class="btn btn-primary btn-sm" title="Approve and safely allocate quantity">
+                                                ✅ Approve
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <div class="approval-blocked-box">
+                                            {% if is_cancelled %}
+                                                <span class="badge-disabled-reason">✖️ Listing Cancelled</span>
+                                            {% elif is_fully_allocated %}
+                                                <span class="badge-disabled-reason">🚫 Fully Allocated (0 Avail)</span>
+                                            {% elif is_expired %}
+                                                <span class="badge-disabled-reason">⏰ Listing Expired</span>
+                                            {% elif is_insufficient_qty %}
+                                                <span class="badge-disabled-reason">⚠️ Insufficient Qty (Avail: {{ req.quantity_available }})</span>
+                                            {% endif %}
+                                            <button type="button" class="btn btn-disabled btn-sm" disabled title="Cannot approve in current listing state">
+                                                Approve
+                                            </button>
+                                        </div>
+                                    {% endif %}
+
+                                    <form method="POST" action="{{ url_for('reject_request', request_id=req.request_id) }}" 
+                                          onsubmit="return confirm('Reject this donation request?');" 
+                                          style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" style="width: 100%;" title="Decline this request">
+                                            ❌ Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            {% elif req.request_status == 'approved' %}
+                                <div style="font-size: 12px; color: #166534; margin-bottom: 6px;">
+                                    <strong>✅ Approved</strong>
+                                    {% if req.reviewed_at %}
+                                        <small>{{ req.reviewed_at.strftime('%d %b %Y') }}</small>
+                                    {% endif %}
+                                    {% if req.remarks %}
+                                        <div style="color: var(--text-muted); font-size: 11px;">"{{ req.remarks }}"</div>
+                                    {% endif %}
+                                </div>
+
+                                {# Collection Scheduling Controls #}
+                                {% if not req.schedule_id %}
+                                    <div class="schedule-box">
+                                        <form method="POST" action="{{ url_for('schedule_collection', request_id=req.request_id) }}" class="schedule-form">
+                                            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">📅 Schedule Pickup</div>
+                                            <input type="datetime-local" 
+                                                   name="scheduled_at" 
+                                                   required 
+                                                   min="{{ min_schedule_time }}"
+                                                   class="input-schedule-time">
+                                            <input type="text" 
+                                                   name="notes" 
+                                                   placeholder="Pickup notes (optional)" 
+                                                   class="input-remarks" 
+                                                   style="width: 100% !important;">
+                                            <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;">
+                                                Schedule Pickup
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    {% if req.schedule_status == 'scheduled' %}
+                                        <div style="margin-bottom: 6px;">
+                                            <span class="status-badge status-scheduled">
+                                                🕒 Pickup: {{ req.scheduled_at.strftime('%d %b, %I:%M %p') }}
+                                            </span>
+                                            {% if req.schedule_notes %}
+                                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                                    "{{ req.schedule_notes }}"
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="action-cell-stack">
+                                            <form method="POST" action="{{ url_for('update_schedule_status', schedule_id=req.schedule_id) }}" style="display:inline;">
+                                                <input type="hidden" name="status" value="collected">
+                                                <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;" title="Confirm food has been handed over">
+                                                    ✅ Mark Collected
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('update_schedule_status', schedule_id=req.schedule_id) }}" style="display:inline;" onsubmit="return confirm('Mark this collection as missed?');">
+                                                <input type="hidden" name="status" value="missed">
+                                                <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; color: #991b1b;" title="Mark as missed">
+                                                    ❌ Mark Missed
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% elif req.schedule_status == 'collected' %}
+                                        <div>
+                                            <span class="status-badge status-collected">
+                                                ✅ Collected {{ req.collected_at.strftime('%d %b, %I:%M %p') if req.collected_at else '' }}
+                                            </span>
+                                            {% if req.distribution_id %}
+                                                <div style="font-size: 11px; color: #166534; margin-top: 4px; font-weight: 500;">
+                                                    🌱 Distributed: <strong>{{ req.quantity_distributed }}</strong> {{ req.unit }}
+                                                    {% if req.recipient_count %}({{ req.recipient_count }} recipients){% endif %}
+                                                </div>
+                                            {% else %}
+                                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                                                    Awaiting NGO distribution record
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% elif req.schedule_status == 'missed' %}
+                                        <div>
+                                            <span class="status-badge status-missed">❌ Missed Collection</span>
+                                            <form method="POST" action="{{ url_for('update_schedule_status', schedule_id=req.schedule_id) }}" style="margin-top: 4px;">
+                                                <input type="hidden" name="status" value="collected">
+                                                <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">
+                                                    Mark Collected (Delayed)
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% elif req.request_status == 'rejected' %}
+                                <div style="font-size: 12px; color: #991b1b;">
+                                    <strong>Rejected</strong>
+                                    {% if req.reviewed_at %}
+                                        <br><small>{{ req.reviewed_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+                                    {% endif %}
+                                    {% if req.remarks %}
+                                        <br><small style="color: var(--text-muted);">"{{ req.remarks }}"</small>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span style="color: var(--text-muted); font-size: 12px;">Cancelled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="field-hint" style="text-align: center; padding: 24px 0;">
+            No donation requests have been submitted for your food listings yet.
+        </p>
+    {% endif %}
+</section>
+
+{# Donor's listings #}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>My Food Listings</h2>
+            <p>Listings created by {{ current_user.name }}. You can edit or cancel your own active listings.</p>
+        </div>
+        <a href="{{ url_for('donations') }}" class="btn btn-secondary btn-sm">+ New Listing</a>
+    </div>
+
+    {% if my_listings %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-id">ID</th>
+                        <th>Food Item</th>
+                        <th>Category</th>
+                        <th>Source</th>
+                        <th class="col-qty">Available / Total</th>
+                        <th>Pickup City</th>
+                        <th class="col-date">Expiry</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-action">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in my_listings %}
+                    <tr>
+                        <td class="col-id">#{{ item.listing_id }}</td>
+                        <td>
+                            <strong>{{ item.food_name }}</strong>
+                        </td>
+                        <td>{{ item.category_name }}</td>
+                        <td>{{ item.source_type }}</td>
+                        <td class="col-qty">{{ item.quantity_available }} / {{ item.quantity_total }} {{ item.unit }}</td>
+                        <td>{{ item.city }}</td>
+                        <td class="col-date">{{ item.expiry_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        <td class="col-status">
+                            <span class="status-badge status-{{ item.status }}">
+                                {{ item.status|replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td class="col-action">
+                            <div style="display: flex; gap: 6px;">
+                                <a href="{{ url_for('edit_listing', listing_id=item.listing_id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                                {% if item.status == 'available' %}
+                                <form method="POST" action="{{ url_for('cancel_listing', listing_id=item.listing_id) }}" onsubmit="return confirm('Cancel this listing?');" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 30px;">
+            <p class="field-hint" style="margin-bottom: 16px;">You haven't added any food listings yet.</p>
+            <a href="{{ url_for('donations') }}" class="btn btn-primary">Add Your First Donation</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

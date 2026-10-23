@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Record Food Distribution - Plentiq{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 680px; margin: 32px auto;">
+    <div class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>📦 Record Community Food Distribution</h2>
+                <p>Track the redistribution of safely collected surplus food to community beneficiaries</p>
+            </div>
+            <a href="{{ url_for('dashboard_ngo') }}" class="btn btn-secondary btn-sm">← Back to Dashboard</a>
+        </div>
+
+        {# Batch Summary Box #}
+        <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px;">
+                RESCUE BATCH DETAILS
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
+                <div>
+                    <span style="color: var(--text-muted); font-size: 12px; display: block;">Food Item:</span>
+                    <strong>{{ schedule.food_name }}</strong> (Listing #{{ schedule.listing_id }})
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 12px; display: block;">Donor Organization:</span>
+                    <strong>{{ schedule.donor_name }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 12px; display: block;">Collected Quantity:</span>
+                    <strong style="color: var(--primary); font-size: 16px;">{{ schedule.requested_quantity }}</strong> {{ schedule.unit }}
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 12px; display: block;">Collection Completed:</span>
+                    <strong>{{ schedule.collected_at.strftime('%d %b %Y, %I:%M %p') if schedule.collected_at else 'Verified Collected' }}</strong>
+                </div>
+            </div>
+        </div>
+
+        {# Distribution Form #}
+        <form method="POST" action="{{ url_for('record_distribution', schedule_id=schedule.schedule_id) }}">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="quantity_distributed">
+                        Quantity Distributed ({{ schedule.unit }}) <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="number" 
+                           id="quantity_distributed" 
+                           name="quantity_distributed" 
+                           step="0.01" 
+                           min="0.01" 
+                           max="{{ schedule.requested_quantity }}" 
+                           value="{{ schedule.requested_quantity }}" 
+                           required>
+                    <span class="field-hint">
+                        Approved collected amount: <strong>{{ schedule.requested_quantity }} {{ schedule.unit }}</strong> (cannot exceed this amount)
+                    </span>
+                </div>
+
+                <div class="field">
+                    <label for="recipient_count">
+                        Recipients Reached (Optional)
+                    </label>
+                    <input type="number" 
+                           id="recipient_count" 
+                           name="recipient_count" 
+                           step="1" 
+                           min="0" 
+                           placeholder="e.g. 75">
+                    <span class="field-hint">
+                        Estimated number of individuals or families served
+                    </span>
+                </div>
+
+                <div class="field full-width">
+                    <label for="distributed_at">
+                        Distribution Date &amp; Time <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="datetime-local" 
+                           id="distributed_at" 
+                           name="distributed_at" 
+                           value="{{ now_str }}" 
+                           required>
+                    <span class="field-hint">
+                        Date and time when the food was handed over or served
+                    </span>
+                </div>
+
+                <div class="field full-width">
+                    <label for="notes">
+                        Distribution Notes / Location (Optional)
+                    </label>
+                    <textarea id="notes" 
+                              name="notes" 
+                              rows="3" 
+                              placeholder="e.g. Distributed to residents at Ward 4 Community Center, lunch distribution..."></textarea>
+                    <span class="field-hint">
+                        Specific shelter, distribution camp, or beneficiary feedback
+                    </span>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <a href="{{ url_for('dashboard_ngo') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    💾 Save Distribution Record
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

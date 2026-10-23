@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | Plentiq{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="panel">
+        <div class="panel-header" style="text-align: center; border-bottom: none; padding-bottom: 0;">
+            <div style="width: 100%;">
+                <h2>Sign In to Plentiq</h2>
+                <p>Access your organization's surplus food dashboard</p>
+            </div>
+        </div>
+
+        {# Quick Switch / Demo Accounts Helper #}
+        {% if demo_mode %}
+        <div class="demo-credentials-box">
+            <h4>🧪 Demonstration Accounts (Pre-configured)</h4>
+            <div class="demo-acc-item">
+                <div>
+                    <strong>🌿 Food Donor</strong><br>
+                    <code>donor.demo@plentiq.local</code>
+                </div>
+                <a href="{{ url_for('demo_switch', role='donor') }}" class="btn btn-secondary btn-sm">Switch To Donor</a>
+            </div>
+            <div class="demo-acc-item">
+                <div>
+                    <strong>🤝 Verified NGO</strong><br>
+                    <code>ngo.demo@plentiq.local</code>
+                </div>
+                <a href="{{ url_for('demo_switch', role='ngo') }}" class="btn btn-secondary btn-sm">Switch To NGO</a>
+            </div>
+            <div class="demo-acc-item">
+                <div>
+                    <strong>🛡️ Platform Admin</strong><br>
+                    <code>admin.demo@plentiq.local</code>
+                </div>
+                <a href="{{ url_for('demo_switch', role='admin') }}" class="btn btn-secondary btn-sm">Switch To Admin</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login', next=request.args.get('next')) }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="field">
+                    <label for="email">Email Address *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        value="{{ email or '' }}" 
+                        required 
+                        placeholder="e.g. donor.demo@plentiq.local"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="password">Password *</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        placeholder="Enter password"
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+                    🔑 Sign In
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

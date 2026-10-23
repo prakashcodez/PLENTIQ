@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Surplus Food Listings | Plentiq{% endblock %}
+
+{% block content %}
+<div class="panel-header" style="margin-bottom: 24px;">
+    <div>
+        <h2>Surplus Food Redistribution Directory</h2>
+        <p>Explore surplus prepared meals and food batches available for rescue across participating locations</p>
+    </div>
+    {% if current_user.role in ['donor', 'admin'] %}
+        <a href="{{ url_for('donations') }}" class="btn btn-primary btn-sm">➕ Add New Food Donation</a>
+    {% endif %}
+</div>
+
+<section class="panel">
+    {# Search & Filters #}
+    <form method="GET" action="{{ url_for('listings') }}" style="margin-bottom: 24px;">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 180px;">
+                <select name="category" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.category_id }}" {% if selected_category == (cat.category_id|string) %}selected{% endif %}>
+                            {{ cat.category_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <select name="status" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="available" {% if selected_status == 'available' %}selected{% endif %}>Available Only</option>
+                    <option value="fully_allocated" {% if selected_status == 'fully_allocated' %}selected{% endif %}>Fully Allocated</option>
+                    <option value="expired" {% if selected_status == 'expired' %}selected{% endif %}>Expired</option>
+                    <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <input type="text" name="city" placeholder="Filter by City..." value="{{ selected_city or '' }}">
+            </div>
+            <div>
+                <button type="submit" class="btn btn-secondary">Filter</button>
+                <a href="{{ url_for('listings') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    {% if listings %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-id">ID</th>
+                        <th>Food Details</th>
+                        <th>Category</th>
+                        <th>Donor Organization</th>
+                        <th class="col-qty">Available Quantity</th>
+                        <th>Pickup City</th>
+                        <th class="col-date">Expiry Deadline</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-action">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in listings %}
+                    <tr>
+                        <td>#{{ item.listing_id }}</td>
+                        <td>
+                            <strong>{{ item.food_name }}</strong>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                                Source: {{ item.source_type }}
+                            </div>
+                            {% if item.handling_notes %}
+                                <div style="font-size: 11px; color: var(--text-muted); font-style: italic;">
+                                    Note: {{ item.handling_notes|truncate(40) }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.category_name }}</td>
+                        <td>
+                            <strong>{{ item.donor_name }}</strong>
+                        </td>
+                        <td>
+                            <strong style="color: var(--primary);">{{ item.quantity_available }}</strong> / {{ item.quantity_total }} {{ item.unit }}
+                        </td>
+                        <td>{{ item.city }}</td>
+                        <td>
+                            {{ item.expiry_at.strftime('%d %b %Y, %I:%M %p') }}
+                            {% if item.expiry_at < now %}
+                                <br><span style="color: #dc2626; font-size: 11px; font-weight: bold;">[EXPIRED]</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ item.status }}">
+                                {{ item.status|replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if current_user.role == 'ngo' and item.status == 'available' and item.expiry_at > now and item.quantity_available > 0 and item.donor_id != current_user.id %}
+                                <form method="POST" action="{{ url_for('request_listing', listing_id=item.listing_id) }}" class="inline-action-group">
+                                    <input type="number" 
+                                           name="requested_quantity" 
+                                           class="inline-qty-input" 
+                                           min="0.01" 
+                                           max="{{ item.quantity_available }}" 
+                                           step="0.01" 
+                                           value="{{ item.quantity_available }}" 
+                                           title="Quantity to request in {{ item.unit }}"
+                                           required>
+                                    <button type="submit" class="btn btn-accent btn-sm" title="Submit allocation request">
+                                        Request
+                                    </button>
+                                </form>
+                            {% elif current_user.role == 'admin' or (current_user.role == 'donor' and current_user.id == item.donor_id) %}
+                                <div style="display: flex; gap: 6px;">
+                                    <a href="{{ url_for('edit_listing', listing_id=item.listing_id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                                </div>
+                            {% elif not current_user.is_authenticated and item.status == 'available' and item.expiry_at > now %}
+                                <a href="{{ url_for('login', next=url_for('listings')) }}" class="btn btn-secondary btn-sm">Sign in to Request</a>
+                            {% else %}
+                                <span style="color: var(--text-muted); font-size: 12px;">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="field-hint" style="text-align: center; padding: 24px 0;">
+            No food listings match the chosen filter criteria.
+        </p>
+    {% endif %}
+</section>
+{% endblock %}

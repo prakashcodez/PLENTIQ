@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Plentiq | Surplus Food Redistribution{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    {# Main Header & Navigation Bar #}
+    <header class="main-header">
+        <nav class="navbar" aria-label="Main Navigation">
+            <a href="{{ url_for('home') if current_user.is_authenticated else url_for('landing') }}" class="brand">
+                <div class="brand-text">
+                    <h1>Plentiq</h1>
+                    <span>Food, shared with purpose</span>
+                </div>
+            </a>
+
+            <ul class="nav-links">
+                <li>
+                    <a href="{{ url_for('home') if current_user.is_authenticated else url_for('landing') }}"
+                       class="nav-link {% if request.endpoint in ['home', 'landing'] %}active{% endif %}">
+                        Home
+                    </a>
+                </li>
+
+                {% if current_user.role == 'donor' %}
+                    <li>
+                        <a href="{{ url_for('donations') }}"
+                           class="nav-link {% if request.endpoint in ['donations', 'edit_listing'] %}active{% endif %}">
+                            My Food Listings
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('dashboard_donor') }}"
+                           class="nav-link {% if request.endpoint in ['dashboard', 'dashboard_donor', 'approve_request', 'reject_request'] %}active{% endif %}">
+                            Donation Requests
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('listings') }}"
+                           class="nav-link {% if request.endpoint == 'listings' %}active{% endif %}">
+                            Discover Food
+                        </a>
+                    </li>
+
+                {% elif current_user.role == 'ngo' %}
+                    <li>
+                        <a href="{{ url_for('listings') }}"
+                           class="nav-link {% if request.endpoint == 'listings' %}active{% endif %}">
+                            Discover Food
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('dashboard_ngo') }}"
+                           class="nav-link {% if request.endpoint in ['dashboard', 'dashboard_ngo', 'record_distribution'] %}active{% endif %}">
+                            My Requests & Collections
+                        </a>
+                    </li>
+
+                {% elif current_user.role == 'admin' %}
+                    <li>
+                        <a href="{{ url_for('dashboard_admin') }}"
+                           class="nav-link {% if request.endpoint in ['dashboard', 'dashboard_admin'] %}active{% endif %}">
+                            Admin Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('listings') }}"
+                           class="nav-link {% if request.endpoint == 'listings' %}active{% endif %}">
+                            Food Listings
+                        </a>
+                    </li>
+
+                {% else %}
+                    <li>
+                        <a href="{{ url_for('listings') }}"
+                           class="nav-link {% if request.endpoint == 'listings' %}active{% endif %}">
+                            Discover Food
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            <div class="nav-actions">
+                {% if current_user.is_authenticated %}
+                    <div class="user-badge" title="Logged in as {{ current_user.email }}">
+                        <span><strong>{{ current_user.name }}</strong></span>
+                        <span class="role-pill role-{{ current_user.role }}">{{ current_user.role }}</span>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Log In</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    {# Flash Messages #}
+    <div class="page-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    <span>
+                        {% if category == 'success' %}✅
+                        {% elif category == 'error' %}⚠️
+                        {% elif category == 'warning' %}🔔
+                        {% else %}ℹ️{% endif %}
+                        {{ message }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        {# Page Specific Content #}
+        {% block content %}{% endblock %}
+    </div>
+
+    {# Footer #}
+    <footer class="main-footer">
+        <div class="footer-inner">
+            <div class="footer-disclaimer">
+                <p><strong>Plentiq Food Rescue Platform</strong> — Connecting surplus food with organizations that need it.</p>
+                <p style="margin-top: 4px; font-size: 12px;">
+                    Plentiq records donor-provided expiry and handling information. It does not certify food safety.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+

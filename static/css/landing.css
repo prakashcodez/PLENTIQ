@@ -1,0 +1,287 @@
+/* ============================================================
+   Plentiq — Landing Page Styles  (landing.css)
+   Color palette:
+     Forest Green   #174A35
+     Secondary Green #5D9B6A
+     Off-white bg   #F7F6F0
+     White cards    #FFFFFF
+     Orange accent  #E69A69
+     Charcoal text  #24312A
+   ============================================================ */
+
+/* ---- Reset / Base ---------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: #F7F6F0;
+    color: #24312A;
+    min-height: 100vh;
+}
+
+/* ---- Demo Ribbon ----------------------------------------- */
+.lp-demo-ribbon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #174A35;
+    color: #F7F6F0;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 16px;
+    letter-spacing: 0.03em;
+}
+
+.lp-demo-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #E69A69;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.lp-demo-badge {
+    background: #5D9B6A;
+    color: #fff;
+    border-radius: 20px;
+    padding: 1px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+/* ---- Flash Messages -------------------------------------- */
+.lp-flash-wrap {
+    max-width: 860px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lp-flash {
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.lp-flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.lp-flash.error   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.lp-flash.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+.lp-flash.info    { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+/* ---- Root / Layout --------------------------------------- */
+.lp-root {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ---- Hero ------------------------------------------------ */
+.lp-hero {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.lp-logo {
+    height: 70px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 18px;
+}
+
+.lp-tagline {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #5D9B6A;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.lp-subtitle {
+    font-size: 15px;
+    color: #4a5c50;
+    line-height: 1.5;
+}
+
+/* ---- Cards Grid ------------------------------------------ */
+.lp-cards {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-bottom: 32px;
+}
+
+.lp-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(23, 74, 53, 0.09);
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    border: 1.5px solid #e8ede9;
+}
+
+.lp-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(23, 74, 53, 0.15);
+}
+
+/* ---- Card image area ------------------------------------- */
+.lp-card-img-wrap {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F7F6F0;
+    padding: 16px;
+}
+
+.lp-card-img {
+    max-height: 148px;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* ---- Card body ------------------------------------------- */
+.lp-card-body {
+    padding: 20px 22px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.lp-card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #174A35;
+}
+
+.lp-card-desc {
+    font-size: 13.5px;
+    color: #4a5c50;
+    line-height: 1.55;
+    flex: 1;
+}
+
+/* ---- Demo Buttons ---------------------------------------- */
+.lp-btn {
+    display: inline-block;
+    padding: 10px 28px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: background 0.16s, transform 0.12s;
+}
+
+.lp-btn:hover { transform: translateY(-1px); }
+
+.lp-btn-donor {
+    background: #174A35;
+    color: #ffffff;
+}
+.lp-btn-donor:hover { background: #1e6044; }
+
+.lp-btn-ngo {
+    background: #E69A69;
+    color: #ffffff;
+}
+.lp-btn-ngo:hover { background: #d4854f; }
+
+.lp-btn-admin {
+    background: #174A35;
+    color: #ffffff;
+}
+.lp-btn-admin:hover { background: #1e6044; }
+
+/* ---- Divider --------------------------------------------- */
+.lp-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 380px;
+    margin-bottom: 20px;
+}
+
+.lp-divider-line {
+    flex: 1;
+    height: 1px;
+    background: #c8d4cc;
+}
+
+.lp-divider-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7a9483;
+    letter-spacing: 0.1em;
+}
+
+/* ---- Email Sign-in Button -------------------------------- */
+.lp-email-action {
+    margin-bottom: 28px;
+}
+
+.lp-btn-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 36px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #24312A;
+    background: #FFFFFF;
+    border: 2px solid #c0cfc5;
+    text-decoration: none;
+    transition: border-color 0.16s, background 0.16s, transform 0.12s;
+    letter-spacing: 0.01em;
+}
+
+.lp-btn-email:hover {
+    border-color: #5D9B6A;
+    background: #f0f6f2;
+    transform: translateY(-1px);
+}
+
+/* ---- Footer Note ----------------------------------------- */
+.lp-footer-note {
+    font-size: 13px;
+    color: #6e8a75;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lp-leaf {
+    font-size: 15px;
+}
+
+/* ---- Responsive ------------------------------------------ */
+@media (max-width: 680px) {
+    .lp-cards { flex-direction: column; align-items: center; }
+    .lp-card  { width: 100%; max-width: 340px; }
+    .lp-logo  { height: 55px; }
+}
+
