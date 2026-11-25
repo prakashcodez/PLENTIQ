@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f7f3">
+  <title>{{ page_title|default('Admin dashboard') }} · Plentiq</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-page">
+  <div class="admin-layout">
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+      <a class="admin-brand" href="{{ url_for('admin_dashboard') }}"><img src="{{ url_for('static', filename='images/plentiq-logo.png') }}" alt="Plentiq"><span>PLATFORM ADMIN</span></a>
+      <nav class="admin-nav">
+        <a class="{{ 'is-active' if active_page == 'dashboard' else '' }}" href="{{ url_for('admin_dashboard') }}"><span class="admin-nav-icon">▦</span>Overview</a>
+        <a class="{{ 'is-active' if active_page == 'users' else '' }}" href="{{ url_for('admin_users') }}"><span class="admin-nav-icon">♙</span>Accounts</a>
+        <a class="{{ 'is-active' if active_page == 'donations' else '' }}" href="{{ url_for('admin_donations') }}"><span class="admin-nav-icon">▣</span>Donations</a>
+        <a class="{{ 'is-active' if active_page == 'requests' else '' }}" href="{{ url_for('admin_requests') }}"><span class="admin-nav-icon">↗</span>Requests &amp; collections</a>
+        <a class="{{ 'is-active' if active_page == 'reports' else '' }}" href="{{ url_for('admin_reports') }}"><span class="admin-nav-icon">⚑</span>Reports</a>
+      </nav>
+      <div class="admin-sidebar-bottom">
+        <div class="admin-sidebar-note"><span aria-hidden="true">✦</span><strong>Good food.<br>Better outcomes.</strong><small>One platform, shared purpose.</small></div>
+        <a class="admin-logout" href="{{ url_for('logout') }}"><span aria-hidden="true">↪</span>Log out</a>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <a class="admin-mobile-brand" href="{{ url_for('admin_dashboard') }}"><img src="{{ url_for('static', filename='images/plentiq-logo.png') }}" alt="Plentiq"></a>
+        <div class="admin-breadcrumb"><span>Plentiq</span><span aria-hidden="true">/</span><strong>{{ page_title|default('Overview') }}</strong></div>
+        <div class="admin-account"><span class="admin-avatar">{{ session.get('full_name', 'A')[:1]|upper }}</span><span><strong>{{ session.get('full_name', 'Admin') }}</strong><small>Administrator</small></span></div>
+      </header>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div class="admin-flashes">{% for category, message in messages %}<p class="admin-flash admin-flash-{{ category }}" role="status">{{ message }}</p>{% endfor %}</div>{% endif %}
+      {% endwith %}
+      <main class="admin-content">{% block content %}{% endblock %}</main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,78 +1,63 @@
-{% extends "base.html" %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f1">
+  <title>Sign in — Plentiq</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-panel" aria-labelledby="login-title">
+      <a class="back-link" href="{{ url_for('landing') }}"><span aria-hidden="true">←</span> Back</a>
 
-{% block title %}Sign In | Plentiq{% endblock %}
+      <div class="login-content">
+        <a class="login-logo" href="{{ url_for('landing') }}" aria-label="Plentiq home">
+          <img src="{{ url_for('static', filename='images/plentiq-logo.png') }}" alt="Plentiq">
+        </a>
+        <h1 id="login-title">Welcome back!</h1>
+        <p class="login-intro">Sign in to continue making an impact.</p>
 
-{% block content %}
-<div class="login-container">
-    <div class="panel">
-        <div class="panel-header" style="text-align: center; border-bottom: none; padding-bottom: 0;">
-            <div style="width: 100%;">
-                <h2>Sign In to Plentiq</h2>
-                <p>Access your organization's surplus food dashboard</p>
-            </div>
-        </div>
-
-        {# Quick Switch / Demo Accounts Helper #}
-        {% if demo_mode %}
-        <div class="demo-credentials-box">
-            <h4>🧪 Demonstration Accounts (Pre-configured)</h4>
-            <div class="demo-acc-item">
-                <div>
-                    <strong>🌿 Food Donor</strong><br>
-                    <code>donor.demo@plentiq.local</code>
-                </div>
-                <a href="{{ url_for('demo_switch', role='donor') }}" class="btn btn-secondary btn-sm">Switch To Donor</a>
-            </div>
-            <div class="demo-acc-item">
-                <div>
-                    <strong>🤝 Verified NGO</strong><br>
-                    <code>ngo.demo@plentiq.local</code>
-                </div>
-                <a href="{{ url_for('demo_switch', role='ngo') }}" class="btn btn-secondary btn-sm">Switch To NGO</a>
-            </div>
-            <div class="demo-acc-item">
-                <div>
-                    <strong>🛡️ Platform Admin</strong><br>
-                    <code>admin.demo@plentiq.local</code>
-                </div>
-                <a href="{{ url_for('demo_switch', role='admin') }}" class="btn btn-secondary btn-sm">Switch To Admin</a>
-            </div>
-        </div>
+        {% if login_notice %}
+          <p class="login-notice" role="status">{{ login_notice }}</p>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('login', next=request.args.get('next')) }}">
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div class="field">
-                    <label for="email">Email Address *</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        value="{{ email or '' }}" 
-                        required 
-                        placeholder="e.g. donor.demo@plentiq.local"
-                        autocomplete="email"
-                    >
-                </div>
+        <form class="login-form" method="post" action="{{ url_for('login') }}">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" value="{{ email|default('') }}" required>
 
-                <div class="field">
-                    <label for="password">Password *</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required 
-                        placeholder="Enter password"
-                        autocomplete="current-password"
-                    >
-                </div>
+          <label for="password">Password</label>
+          <div class="password-field">
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+            <button class="password-toggle" type="button" aria-controls="password" aria-pressed="false">Show</button>
+          </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
-                    🔑 Sign In
-                </button>
-            </div>
+          <button class="button button-primary submit-button" type="submit">Sign in <span aria-hidden="true">→</span></button>
         </form>
-    </div>
-</div>
-{% endblock %}
+      </div>
+    </section>
 
+    <aside class="login-visual" aria-label="Plentiq connects surplus food with local communities">
+      <img class="login-photo" src="{{ url_for('static', filename='images/e9fde465-8e2c-462f-a152-118b8c932eef.png') }}" alt="A box of fresh donated food at sunrise">
+      <div class="visual-copy">
+        <span class="coral-rule" aria-hidden="true"></span>
+        <h2>Good food.<br><span>Brighter</span><br><em>tomorrows.</em></h2>
+        <p>Connecting surplus food with communities that need it.</p>
+      </div>
+      <span class="visual-tag">Shared with purpose</span>
+    </aside>
+  </main>
+  <script>
+    const passwordInput = document.getElementById("password");
+    const passwordToggle = document.querySelector(".password-toggle");
+
+    passwordToggle.addEventListener("click", () => {
+      const showPassword = passwordInput.type === "password";
+      passwordInput.type = showPassword ? "text" : "password";
+      passwordToggle.textContent = showPassword ? "Hide" : "Show";
+      passwordToggle.setAttribute("aria-pressed", String(showPassword));
+    });
+  </script>
+</body>
+</html>

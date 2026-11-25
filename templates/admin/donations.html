@@ -1,0 +1,16 @@
+{% extends 'admin/base.html' %}
+{% set page_title = 'Donations' %}
+{% block content %}
+  <header class="admin-page-heading"><div><p class="admin-eyebrow">PLATFORM ACTIVITY</p><h1>Donations</h1><p>Review every saved donation and its food items, owner, location, and pickup status.</p></div><span class="admin-page-count">{{ donations|length }} listing{{ '' if donations|length == 1 else 's' }} shown</span></header>
+  <section class="admin-panel admin-filter-panel"><form class="admin-filter-form" method="get" action="{{ url_for('admin_donations') }}">
+    <label class="admin-search-field"><span class="sr-only">Search donations</span><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Search food, donor, city, or area"></label>
+    <label class="admin-select-field"><span class="sr-only">Filter by donation status</span><select name="status"><option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All statuses</option><option value="active" {{ 'selected' if status_filter == 'active' else '' }}>Active</option><option value="fully_allocated" {{ 'selected' if status_filter == 'fully_allocated' else '' }}>Fully allocated</option><option value="cancelled" {{ 'selected' if status_filter == 'cancelled' else '' }}>Cancelled</option></select></label>
+    <button class="admin-button admin-button-primary" type="submit">Apply filters</button><a class="admin-button admin-button-light" href="{{ url_for('admin_donations') }}">Reset</a>
+  </form></section>
+  {% if page_error %}<div class="admin-alert" role="alert">{{ page_error }}</div>{% endif %}
+  <section class="admin-panel admin-data-panel">
+    {% if donations %}<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Donation</th><th>Donor</th><th>Pickup area</th><th>Status</th><th>Pickup deadline</th><th>Created</th></tr></thead><tbody>
+      {% for item in donations %}<tr><td><strong>{{ item[8] or 'Food listing' }}</strong><small>Donation #{{ item[0] }} · {{ item[7] }} food item{{ '' if item[7] == 1 else 's' }}</small></td><td>{{ item[6] }}</td><td>{{ item[2] }}, {{ item[1] }}</td><td><span class="admin-status status-{{ item[3] }}">{{ item[3].replace('_', ' ').title() }}</span></td><td>{{ item[5].strftime('%d %b %Y, %I:%M %p') }}</td><td>{{ item[4].strftime('%d %b %Y') }}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="admin-empty-state"><span aria-hidden="true">▣</span><h2>No donation listings found</h2><p>Saved donations will appear here automatically.</p></div>{% endif %}
+  </section>
+{% endblock %}

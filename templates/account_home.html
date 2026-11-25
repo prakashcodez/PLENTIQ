@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ role_name }} account · Plentiq</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <main class="account-home">
+    <h1>Welcome, {{ full_name }}</h1>
+    <p>Your {{ role_name|lower }} account is signed in. This role’s dashboard is the next UI phase.</p>
+    <a href="{{ url_for('logout') }}">Log out</a>
+  </main>
+</body>
+</html>

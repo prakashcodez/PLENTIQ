@@ -1,0 +1,54 @@
+{% extends 'donor/base.html' %}
+{% set page_title = 'My Donations' %}
+{% block content %}
+  <header class="my-donations-heading">
+    <div><h1>My Donations <span class="donation-leaf" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 3C10 3 5 7 5 14c0 3 2 5 5 5 7 0 10-7 10-16Z"/><path d="M4 22c3-7 7-11 13-15"/></svg></span></h1><p>Manage your food donations, track their status, and make a greater impact.</p></div>
+    <a class="button button-primary" href="{{ donor_url('donor_create_donation') }}"><span aria-hidden="true">＋</span> Create Donation</a>
+  </header>
+
+  <section class="donation-controls" aria-label="Donation filters">
+    <nav class="donation-tabs" aria-label="Filter donations by status">
+      {% set tabs = [('all', 'All'), ('active', 'Active'), ('pending_requests', 'Pending Requests'), ('completed', 'Completed'), ('expiring', 'Expiring Soon'), ('cancelled', 'Cancelled')] %}
+      {% for key, label in tabs %}
+      <a class="donation-tab {{ 'is-selected' if tab == key else '' }}" href="{{ tab_urls[key] }}" {% if tab == key %}aria-current="page"{% endif %}><span>{{ label }}</span><span class="tab-count">{{ tab_counts[key] }}</span></a>
+      {% endfor %}
+    </nav>
+    <form class="donation-filters" action="{{ filter_action }}" method="get">
+      <input type="hidden" name="tab" value="{{ tab }}">
+      {% if demo_mode %}<input type="hidden" name="demo" value="1">{% endif %}
+      <label class="donation-filter-search"><span class="sr-only">Search by food name or category</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input type="search" name="q" value="{{ query }}" placeholder="Search by food name or category…"></label>
+      <label class="filter-select"><span class="sr-only">Filter by category</span><select name="category"><option value="all">All Categories</option>{% for category in category_options %}<option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></label>
+      <label class="filter-select"><span class="sr-only">Filter by listing status</span><select name="listing_status"><option value="all">All Status</option><option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option><option value="fully_allocated" {% if status_filter == 'fully_allocated' %}selected{% endif %}>Fully Allocated</option><option value="pending_collection" {% if status_filter == 'pending_collection' %}selected{% endif %}>Pending Collection</option><option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option><option value="expiring" {% if status_filter == 'expiring' %}selected{% endif %}>Expiring Soon</option><option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option><option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option></select></label>
+      <fieldset class="date-range-filter"><legend>Date added</legend><label><span class="sr-only">Added from</span><input type="date" name="date_from" value="{{ date_from }}"></label><span aria-hidden="true">–</span><label><span class="sr-only">Added through</span><input type="date" name="date_to" value="{{ date_to }}"></label></fieldset>
+      <label class="sort-filter"><span>Sort by</span><select name="sort"><option value="newest" {% if sort_order == 'newest' %}selected{% endif %}>Newest First</option><option value="oldest" {% if sort_order == 'oldest' %}selected{% endif %}>Oldest First</option><option value="expiring" {% if sort_order == 'expiring' %}selected{% endif %}>Approaching Expiry</option></select></label>
+      <div class="filter-actions"><button class="filter-apply" type="submit">Apply filters</button><a class="filter-reset" href="{{ donor_url('donor_donations') }}">Reset all</a></div>
+    </form>
+  </section>
+
+  {% if saved_notice %}<p class="form-alert" role="status">{{ saved_notice }}</p>{% endif %}
+  {% if filter_error %}<p class="filter-error" role="alert">{{ filter_error }}</p>{% endif %}
+  <section class="my-donation-list" aria-label="Donation results">
+    {% if donations %}
+      {% for item in donations %}
+      {% set source_image = item.uploaded_image or ('images/' ~ (item.image or 'food-fallback.svg')) %}
+      <article class="my-donation-card">
+        <img class="my-donation-photo" src="{{ url_for('static', filename=source_image) }}" data-food-image data-fallback="{{ url_for('static', filename='images/food-fallback.svg') }}" alt="{{ item.image_alt or item.food_name }}">
+        <div class="my-donation-copy">
+          <div class="donation-title-line"><h2>{{ item.food_name }}</h2><div class="food-tags"><span>{{ item.category }}</span>{% if item.diet %}<span>{{ item.diet }}</span>{% endif %}</div></div>
+          <p class="donation-description">{{ item.description }}</p>
+          <div class="donation-meta">
+            <span class="donation-location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>{{ item.area }}, {{ item.city }}</span>
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v14H4zM8 3v8m8-8v8M4 11h16"/></svg>{{ item.quantity }} {{ item.unit }}</span>
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v14H4zM8 3v8m8-8v8M4 11h16"/></svg>{{ item.collected_label or item.deadline_label }}</span>
+          </div>
+        </div>
+        <div class="donation-row-status"><span class="status-pill status-{{ item.status_key }}">{{ item.status }}</span><span class="request-count">{{ item.request_count }} {{ 'Request' if item.request_count == 1 else 'Requests' }}</span></div>
+        <a class="donation-details-button" href="{{ donor_url('donor_donation_detail', donation_id=item.id) }}" aria-label="Open details for {{ item.food_name }}"><span class="sr-only">Open donation details</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>
+        <details class="donation-action-menu"><summary aria-label="More actions for {{ item.food_name }}"><span aria-hidden="true">⋮</span></summary><div class="donation-action-popover"><a href="{{ donor_url('donor_donation_detail', donation_id=item.id) }}">View details</a><a href="{{ donor_url('donor_create_donation') }}">Create a donation</a></div></details>
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="records-empty my-donations-empty"><div><h2>{% if query or category_filter != 'all' or status_filter != 'all' or date_from or date_to %}No donations match these filters{% elif tab == 'all' %}No donations yet{% else %}No {{ 'pending requests' if tab == 'pending_requests' else 'donations' }} in this tab{% endif %}</h2><p>{% if query or category_filter != 'all' or status_filter != 'all' or date_from or date_to %}Change your search or filters, or reset them to see all donations.{% else %}Your saved food donations will appear here.{% endif %}</p><div class="empty-actions"><a class="button button-primary" href="{{ donor_url('donor_create_donation') }}">Create Donation <span aria-hidden="true">→</span></a><a class="filter-reset" href="{{ donor_url('donor_donations') }}">Reset all filters</a></div></div></div>
+    {% endif %}
+  </section>
+{% endblock %}

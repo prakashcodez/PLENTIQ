@@ -1,0 +1,38 @@
+{% extends base_template %}
+{% set page_title = 'My Reports' %}
+{% block content %}
+  <header class="page-heading">
+    <div>
+      <p class="step-kicker">Account updates</p>
+      <h1>My Reports</h1>
+      <p>Track reports you submitted or reports filed about you. These details are visible only to the people involved and the admin team.</p>
+    </div>
+  </header>
+  <section class="participant-report-list" aria-label="Reports involving your account">
+    {% for report in reports %}
+      <article class="participant-report-card panel">
+        <header class="participant-report-heading">
+          <div>
+            <span class="participant-report-status participant-report-status-{{ report.status }}">{{ {'open': 'Open', 'under_review': 'Under review', 'resolved': 'Resolved', 'dismissed': 'Dismissed'}.get(report.status, report.status|replace('_', ' ')|title) }}</span>
+            <h2>{{ report.reason }}</h2>
+          </div>
+          <span class="participant-report-date">Submitted {{ report.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+        </header>
+        <dl class="participant-report-meta">
+          <div><dt>Your role</dt><dd>{{ report.relationship }}</dd></div>
+          <div><dt>Other participant</dt><dd>{{ report.other_party }}</dd></div>
+          <div><dt>Food listing</dt><dd>{{ report.food_name }}</dd></div>
+          <div><dt>Report ID</dt><dd>#{{ report.id }}</dd></div>
+        </dl>
+        {% if report.details %}<div class="participant-report-note"><strong>Details submitted</strong><p>{{ report.details }}</p></div>{% endif %}
+        {% if report.resolution_note %}<div class="participant-report-review"><strong>Admin update</strong><p>{{ report.resolution_note }}</p>{% if report.reviewed_at %}<small>Updated {{ report.reviewed_at.strftime('%d %b %Y, %I:%M %p') }}</small>{% endif %}</div>
+        {% elif report.status == 'resolved' %}<p class="participant-report-review"><strong>Admin update:</strong> This report was reviewed and resolved.</p>
+        {% elif report.status == 'dismissed' %}<p class="participant-report-review"><strong>Admin update:</strong> This report was reviewed and dismissed.</p>
+        {% elif report.status == 'under_review' %}<p class="participant-report-review"><strong>Admin update:</strong> The admin team is reviewing this report.</p>
+        {% else %}<p class="participant-report-review">The admin team has not reviewed this report yet.</p>{% endif %}
+      </article>
+    {% else %}
+      <div class="records-empty"><div><h2>No reports yet</h2><p>Reports you submit, or that involve your account, will appear here with their review status.</p></div></div>
+    {% endfor %}
+  </section>
+{% endblock %}

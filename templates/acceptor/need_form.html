@@ -1,0 +1,68 @@
+{% extends 'acceptor/base.html' %}
+{% set page_title = 'Post a Food Need' %}
+{% block content %}
+  <header class="page-heading acceptor-page-heading"><div><p class="step-kicker">Acceptor workspace</p><h1>Post a Food Need</h1><p>Tell nearby donors what your community needs. You do not need to name a specific food.</p></div><a class="secondary-button" href="{{ url_for('acceptor_needs') }}">My needs</a></header>
+  {% if errors %}<div class="form-errors" role="alert"><strong>Please check these details:</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+  <div class="acceptor-form-layout">
+    <form class="panel acceptor-form" method="post" action="{{ url_for('acceptor_need_new') }}">
+      <div class="acceptor-section-title"><span>1</span><div><h2>Food preferences</h2><p>Choose one or more categories and a dietary preference.</p></div></div>
+      {% set category_images = {
+        'bakery': 'category-bakery.png',
+        'beverages': 'category-beverages.png',
+        'dairy': 'category-dairy.png',
+        'fruits_vegetables': 'category-fruits-vegetables.png',
+        'main_course': 'category-main-course.png',
+        'other': 'category-other.png',
+        'packaged_foods': 'category-packaged-foods.png',
+        'snacks': 'category-snacks.png',
+        'sweets_desserts': 'category-desserts.png'
+      } %}
+      <fieldset class="acceptor-category-picker" aria-describedby="category-help category-count">
+        <legend>Food categories <span aria-hidden="true">*</span></legend>
+        <p id="category-help" class="preference-help">Select every food type your community can accept.</p>
+        <div class="acceptor-category-options">
+          {% for code, label in categories %}
+            <label class="category-choice{% if code in form.categories %} is-selected{% endif %}">
+              <input type="checkbox" name="categories" value="{{ code }}" {% if code in form.categories %}checked{% endif %}>
+              <span class="category-choice-check" aria-hidden="true">✓</span>
+              <img src="{{ url_for('static', filename='images/' ~ category_images.get(code, 'category-other.png')) }}" alt="" loading="lazy">
+              <span class="category-choice-name">{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <p id="category-count" class="preference-selection-count" aria-live="polite">{{ form.categories|length }} selected</p>
+      </fieldset>
+
+      {% set dietary_icons = {'vegetarian': 'eco', 'vegan': 'spa', 'non_vegetarian': 'restaurant', 'not_specified': 'tune'} %}
+      {% set dietary_descriptions = {
+        'vegetarian': 'No meat or fish',
+        'vegan': 'Plant-based food only',
+        'non_vegetarian': 'Meat or fish is suitable',
+        'not_specified': 'No dietary preference'
+      } %}
+      <fieldset class="dietary-picker">
+        <legend>Dietary preference <span aria-hidden="true">*</span></legend>
+        <p class="preference-help">Choose one preference for this food need.</p>
+        <div class="dietary-options">
+          {% for code, label in dietary_options %}
+            <label class="dietary-choice{% if form.dietary_code == code %} is-selected{% endif %}">
+              <input type="radio" name="dietary_code" value="{{ code }}" {% if form.dietary_code == code %}checked{% endif %} required>
+              <span class="dietary-choice-icon material-icons-round" aria-hidden="true">{{ dietary_icons.get(code, 'tune') }}</span>
+              <span class="dietary-choice-copy"><strong>{{ label }}</strong><small>{{ dietary_descriptions.get(code, 'Choose this option if suitable.') }}</small></span>
+              <span class="dietary-choice-check" aria-hidden="true">✓</span>
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <div class="acceptor-section-title"><span>2</span><div><h2>When and for how many</h2><p>The date and meal help donors decide whether a listing fits your need.</p></div></div>
+      <div class="acceptor-fields-two"><label class="field"><span>People needed <span aria-hidden="true">*</span></span><input type="number" name="people_count" min="1" max="100000" step="1" value="{{ form.people_count }}" placeholder="e.g. 25" required></label><label class="field"><span>Date needed <span aria-hidden="true">*</span></span><input type="date" name="needed_for" min="{{ today }}" value="{{ form.needed_for }}" required></label></div>
+      <label class="field"><span>Meal time <span class="optional">(optional)</span></span><select name="meal_period"><option value="">Any meal</option>{% for code, label in [('breakfast','Breakfast'),('lunch','Lunch'),('dinner','Dinner')] %}<option value="{{ code }}" {% if form.meal_period == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label class="field"><span>Additional details <span class="optional">(optional)</span></span><textarea name="notes" maxlength="500" rows="4" placeholder="Share useful details about serving needs or timing.">{{ form.notes }}</textarea></label>
+
+      <div class="acceptor-saved-location"><span class="material-icons-round" aria-hidden="true">location_on</span><div><strong>Your saved pickup location</strong><p>{{ profile.area }}, {{ profile.city }}{% if profile.landmark %} · {{ profile.landmark }}{% endif %}</p>{% if profile.latitude is none or profile.longitude is none %}<small>Coordinates are needed so donors can find this need within 25 km.</small>{% endif %}</div><a href="{{ url_for('acceptor_profile') }}">Edit</a></div>
+      <div class="form-actions"><a class="secondary-button" href="{{ url_for('acceptor_needs') }}">Cancel</a><button class="button button-primary" type="submit" {% if profile.latitude is none or profile.longitude is none %}disabled{% endif %}>Publish Need</button></div>
+    </form>
+    <aside class="acceptor-guidance"><section class="help-card help-tips"><h2>What donors will see</h2><ul><li>Categories and dietary preference</li><li>Number of people</li><li>Date and meal time</li><li>Approximate area and distance</li></ul><p>Your exact address and contact details stay private.</p></section><section class="help-card help-location"><h2>25 km matching</h2><p>Your need is visible to donors whose saved donation location is within 25 km. We only use real coordinates.</p></section></aside>
+  </div>
+{% endblock %}

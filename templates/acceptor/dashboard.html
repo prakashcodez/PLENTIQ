@@ -1,0 +1,35 @@
+{% extends 'acceptor/base.html' %}
+{% set page_title = 'Acceptor Dashboard' %}
+{% block content %}
+  <section class="welcome-banner acceptor-welcome" aria-labelledby="welcome-title">
+    <img src="{{ url_for('static', filename='images/food-donation.png') }}" alt="Fresh food ready to be shared with a local community">
+    <div class="welcome-shade"></div>
+    <div class="welcome-copy"><p class="welcome-kicker">Food shared with purpose</p><h1 id="welcome-title">Welcome, {{ session.get('full_name', 'Acceptor') }} <span aria-hidden="true">✦</span></h1><p>Find nearby food and post what your community needs.</p><span class="welcome-rule" aria-hidden="true"></span></div>
+    <a class="welcome-preview acceptor-create-need" href="{{ url_for('acceptor_need_new') }}">＋ Post a food need</a>
+  </section>
+
+  {% if profile.latitude is none or profile.longitude is none %}<div class="acceptor-location-callout"><strong>Set your location to see nearby food.</strong><span>Use your current location in Profile to match donations within 25 km.</span><a class="button button-primary" href="{{ url_for('acceptor_profile') }}">Set location</a></div>{% endif %}
+  {% if nearby_error or needs_error %}<p class="form-alert" role="alert">Some dashboard data could not be loaded. Check the database migration and reload this page.</p>{% endif %}
+
+  <section class="stats-grid acceptor-stats" aria-label="Acceptor summary">
+    <a class="stat-card stat-green" href="{{ url_for('acceptor_food') }}"><span class="stat-icon" aria-hidden="true">⌕</span><span class="stat-copy"><strong>{{ stats.nearby_food }}</strong><span>Nearby Food Listings</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+    <a class="stat-card stat-amber" href="{{ url_for('acceptor_needs') }}"><span class="stat-icon" aria-hidden="true">＋</span><span class="stat-copy"><strong>{{ stats.open_needs }}</strong><span>Open Food Needs</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+    <a class="stat-card stat-blue" href="{{ url_for('acceptor_requests') }}"><span class="stat-icon" aria-hidden="true">↗</span><span class="stat-copy"><strong>{{ stats.pending_requests }}</strong><span>Pending Requests</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+    <a class="stat-card stat-coral" href="{{ url_for('acceptor_collections') }}"><span class="stat-icon" aria-hidden="true">✓</span><span class="stat-copy"><strong>{{ stats.approved_requests }}</strong><span>Approved Pickups</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+  </section>
+
+  <div class="dashboard-grid acceptor-dashboard-grid">
+    <section class="panel recent-panel">
+      <div class="panel-heading"><h2>Food Available Nearby</h2><a class="view-link" href="{{ url_for('acceptor_food') }}">Find Food <span aria-hidden="true">→</span></a></div>
+      {% if foods %}<div class="acceptor-compact-list">{% for food in foods %}<article class="acceptor-food-row"><img src="{{ url_for('static', filename=food.photo) }}" alt="{{ food.food_name }}"><div><h3>{{ food.food_name }}</h3><p>{{ food.category }} · {{ food.diet }}</p><small>{{ food.distance_km }} km · {{ food.area }}, {{ food.city }}</small></div><strong>{{ food.available_quantity }} {{ food.unit }}</strong></article>{% endfor %}</div>
+      {% else %}<div class="compact-empty"><div><strong>No matching food listings yet</strong><p>When a donor posts a located donation within 25 km, it will appear here.</p><a class="view-link" href="{{ url_for('acceptor_food') }}">Browse nearby food</a></div></div>{% endif %}
+    </section>
+    <aside class="dashboard-side">
+      <section class="create-promo acceptor-promo"><img src="{{ url_for('static', filename='images/food-fruit.png') }}" alt="Fresh produce ready to be shared"><div class="promo-overlay"></div><div class="promo-copy"><h2>Share what your community needs</h2><p>Post your categories, meal preference, date, and number of people.</p><a class="promo-button" href="{{ url_for('acceptor_need_new') }}">＋ Create a food need <span aria-hidden="true">›</span></a></div></section>
+      <section class="panel compact-panel"><div class="panel-heading"><h2>My Open Needs</h2><a class="view-link" href="{{ url_for('acceptor_needs') }}">View All <span aria-hidden="true">→</span></a></div>
+        {% if needs %}<div class="acceptor-need-preview">{% for need in needs %}<div><strong>{{ need.categories }}</strong><span>{{ need.people_count }} people · {{ need.needed_for.strftime('%d %b %Y') }}{% if need.meal_period %} · {{ need.meal_period.title() }}{% endif %}</span></div>{% endfor %}</div>{% else %}<div class="compact-empty"><div><strong>No open needs yet</strong><p>Post a need to help nearby donors understand what your community needs.</p></div></div>{% endif %}
+      </section>
+      <section class="panel nearby-panel"><div class="panel-heading"><h2>Location Range</h2></div><div class="acceptor-range"><span class="material-icons-round" aria-hidden="true">location_on</span><div><strong>25 km</strong><small>Only real, coordinate-matched listings are shown.</small></div></div></section>
+    </aside>
+  </div>
+{% endblock %}

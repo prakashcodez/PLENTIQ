@@ -1,0 +1,34 @@
+{% extends 'admin/base.html' %}
+{% set page_title = 'Accounts' %}
+{% block content %}
+  <header class="admin-page-heading"><div><p class="admin-eyebrow">COMMUNITY MANAGEMENT</p><h1>Accounts</h1><p>Review donor, acceptor, and admin accounts. Blocked accounts cannot sign in.</p></div><span class="admin-page-count">{{ users|length }} account{{ '' if users|length == 1 else 's' }} shown</span></header>
+  <section class="admin-panel admin-filter-panel">
+    <form class="admin-filter-form" method="get" action="{{ url_for('admin_users') }}">
+      <label class="admin-search-field"><span class="sr-only">Search accounts</span><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Search by name or email"></label>
+      <label class="admin-select-field"><span class="sr-only">Filter by account status</span><select name="status"><option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All statuses</option><option value="active" {{ 'selected' if status_filter == 'active' else '' }}>Active</option><option value="blocked" {{ 'selected' if status_filter == 'blocked' else '' }}>Blocked</option></select></label>
+      <button class="admin-button admin-button-primary" type="submit">Apply filters</button><a class="admin-button admin-button-light" href="{{ url_for('admin_users') }}">Reset</a>
+    </form>
+  </section>
+  {% if page_error %}<div class="admin-alert" role="alert">{{ page_error }}</div>{% endif %}
+  <section class="admin-panel admin-data-panel">
+    {% if users %}<div class="admin-table-wrap"><table class="admin-table admin-users-table"><thead><tr><th>Account</th><th>Contact</th><th>Role</th><th>Saved location</th><th>Status</th><th>Joined</th><th>Moderation</th></tr></thead><tbody>
+      {% for user in users %}<tr>
+        <td><strong>{{ user[1] }}</strong><small>Account #{{ user[0] }}</small></td>
+        <td><a href="mailto:{{ user[2] }}">{{ user[2] }}</a>{% if user[3] %}<small>{{ user[3] }}</small>{% endif %}</td>
+        <td><span class="role-pill role-pill-{{ user[5]|lower }}">{{ user[5] }}</span></td>
+        <td>{{ user[8] or '—' }}{% if user[9] %}<small>{{ user[9] }}</small>{% endif %}</td>
+        <td><span class="admin-status status-{{ user[6] }}">{{ user[6].title() }}</span></td>
+        <td>{{ user[7].strftime('%d %b %Y') }}</td>
+        <td>
+          {% if user[4] == 'admin' or user[0] == session.get('user_id') %}<span class="protected-account">Protected admin</span>
+          {% else %}<details class="account-action-details"><summary>{{ 'Unblock' if user[6] == 'blocked' else 'Manage' }}</summary>
+            <form method="post" action="{{ url_for('admin_user_status', user_id=user[0]) }}">
+              {% if user[6] == 'blocked' %}<input type="hidden" name="action" value="unblock"><label class="sr-only" for="reason-{{ user[0] }}">Optional note for unblocking {{ user[1] }}</label><input id="reason-{{ user[0] }}" type="text" name="reason" maxlength="1000" placeholder="Optional moderation note"><button class="admin-button admin-button-good" type="submit">Unblock account</button>
+              {% else %}<input type="hidden" name="action" value="block"><label class="sr-only" for="reason-{{ user[0] }}">Reason for blocking {{ user[1] }}</label><input id="reason-{{ user[0] }}" type="text" name="reason" minlength="5" maxlength="1000" placeholder="Reason for block" required><button class="admin-button admin-button-danger" type="submit">Block account</button>{% endif %}
+            </form>
+          </details>{% endif %}
+        </td>
+      </tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="admin-empty-state"><span aria-hidden="true">♙</span><h2>No matching accounts</h2><p>Try another search or clear the status filter.</p></div>{% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'acceptor/base.html' %}
+{% set page_title = 'My Food Needs' %}
+{% block content %}
+  <header class="my-donations-heading acceptor-page-heading"><div><p class="step-kicker">Acceptor workspace</p><h1>My Food Needs</h1><p>Share your categories, dietary preferences, meal, date, and the number of people to help nearby donors match food.</p></div><a class="button button-primary" href="{{ url_for('acceptor_need_new') }}">＋ Post a food need</a></header>
+  {% if needs_error %}<p class="form-alert" role="alert">Needs could not be loaded. Run database_migrations/005_acceptor_needs_schedule.sql in Workbench if it has not been applied.</p>{% endif %}
+  <nav class="donation-tabs acceptor-status-tabs" aria-label="Filter needs by status">{% for code, label in [('open','Open'),('closed','Closed'),('fulfilled','Fulfilled'),('all','All')] %}<a class="donation-tab {{ 'is-selected' if status_filter == code else '' }}" href="{{ url_for('acceptor_needs', status=code) }}"><span>{{ label }}</span></a>{% endfor %}</nav>
+  <section class="acceptor-needs-list">
+    {% for need in needs %}<article class="acceptor-need-card panel"><div class="acceptor-need-main"><div class="acceptor-food-heading"><div><span class="status-pill status-{{ need.status }}">{{ need.status.title() }}</span><h2>{{ need.categories }}</h2></div><span class="need-people">{{ need.people_count }} <small>people</small></span></div><div class="acceptor-need-facts"><span>{{ need.diet }}</span><span>{{ need.city }} · {{ need.area }}</span><span>{{ need.needed_for.strftime('%A, %d %B %Y') }}{% if need.meal_period %} · {{ need.meal_period.title() }}{% else %} · Any meal{% endif %}</span></div>{% if need.notes %}<p>{{ need.notes }}</p>{% endif %}</div>{% if need.status == 'open' %}<form method="post" action="{{ url_for('acceptor_need_close', need_id=need.id) }}"><button class="button button-outline" type="submit">Close need</button></form>{% endif %}</article>
+    {% else %}<div class="records-empty"><div><h2>No {{ status_filter if status_filter != 'all' else '' }} food needs yet</h2><p>Create a need without naming a specific food. Nearby donors can see your selected categories and preferences.</p><a class="button button-primary" href="{{ url_for('acceptor_need_new') }}">Create a food need <span aria-hidden="true">→</span></a></div></div>{% endfor %}
+  </section>
+{% endblock %}

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plentiq — Project Checklist</title>
+<style>
+:root{--ink:#18251f;--muted:#637169;--paper:#f4f7f3;--card:#fff;--line:#dce5dc;--green:#176b4b;--green2:#dff3e7;--amber:#fff1d3;--shadow:0 10px 28px rgba(25,53,39,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{max-width:900px;margin:0 auto;padding:30px 18px 54px}.hero{background:linear-gradient(135deg,#113d2d,#1c7650);color:white;border-radius:22px;padding:28px clamp(20px,5vw,42px);box-shadow:var(--shadow)}.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.75rem;font-weight:800;opacity:.8}.hero h1{font-size:clamp(2rem,5vw,3rem);line-height:1.08;margin:10px 0}.hero p{max-width:690px;margin:0;color:#e2f2e9}.note{margin:16px 0;padding:13px 16px;background:var(--amber);border:1px solid #f0d69b;border-radius:12px;color:#594414}.progress-card{margin:20px 0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow)}.progress-top{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}.progress-top strong{font-size:1.08rem}.count{font-weight:800;color:var(--green)}.bar{height:10px;background:#e9eee9;border-radius:999px;overflow:hidden;margin:13px 0 7px}.bar span{display:block;height:100%;width:0;background:var(--green);border-radius:999px;transition:width .2s}.small{font-size:.88rem;color:var(--muted)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:13px 0 20px}.toolbar button{font:inherit;font-size:.9rem;font-weight:700;border:1px solid var(--line);padding:9px 13px;border-radius:10px;background:white;color:var(--ink);cursor:pointer}.toolbar button:hover{border-color:var(--green);color:var(--green)}.phase{background:var(--card);border:1px solid var(--line);border-radius:15px;margin:12px 0;overflow:hidden;box-shadow:0 4px 14px rgba(25,53,39,.035)}.phase-heading{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;padding:17px 18px;background:white;border:0;cursor:pointer;color:var(--ink)}.phase-title{font-weight:800;font-size:1.02rem}.phase-progress{display:flex;align-items:center;gap:13px;color:var(--green);font-size:.85rem;font-weight:800;white-space:nowrap}.chevron{font-size:1.2rem;transition:transform .15s}.phase-heading[aria-expanded="false"] .chevron{transform:rotate(-90deg)}.phase-body{padding:0 18px 12px}.phase-body.collapsed{display:none}.task{display:flex;gap:12px;padding:13px 0;border-top:1px solid #edf1ed;cursor:pointer;align-items:flex-start}.task input{appearance:none;flex:0 0 21px;width:21px;height:21px;margin:2px 0 0;border:1.7px solid #9caba0;border-radius:6px;background:white;cursor:pointer;display:grid;place-items:center}.task input:checked{background:var(--green);border-color:var(--green)}.task input:checked:after{content:"✓";color:white;font-size:14px;font-weight:900}.task-copy{display:block;min-width:0}.task-title{display:block;font-weight:700}.task-detail{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.task:has(input:checked) .task-title{text-decoration:line-through;color:#718077}.footer{margin-top:22px;color:var(--muted);font-size:.9rem;text-align:center}.footer strong{color:var(--ink)}@media(max-width:560px){.wrap{padding:16px 12px 36px}.hero{border-radius:16px}.phase-heading{padding:15px 13px}.phase-body{padding:0 13px 8px}.phase-title{font-size:.94rem}.phase-progress{gap:8px}.task-detail{font-size:.86rem}}
+@media print{body{background:white}.wrap{max-width:none;padding:0}.hero{background:white;color:black;border:1px solid #999;box-shadow:none}.hero p{color:black}.note,.toolbar,.progress-card{display:none}.phase{break-inside:avoid;box-shadow:none}.phase-heading{padding:10px}.phase-body,.phase-body.collapsed{display:block!important}.task{padding:7px 0}.footer{display:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Simple step-by-step plan</div>
+    <h1>Plentiq Project Checklist</h1>
+    <p>Build the pages first, create one shared MySQL database, and connect one complete feature at a time. The landing and login UI are drafted and waiting for review; authentication and data storage are not connected yet.</p>
+  </header>
+  <div class="note"><strong>Safety rule:</strong> V1 is the old project. Keep it unchanged. The new app must use a fresh database named <code>plentiq_v2_db</code>.</div>
+  <section class="progress-card" aria-label="Overall progress">
+    <div class="progress-top"><strong>Your progress</strong><span class="count" id="overall-count">0 of 0 complete</span></div>
+    <div class="bar" role="progressbar" aria-label="Checklist completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar"><span id="progress-fill"></span></div>
+    <div class="small" id="progress-message">Start with Stage 0. Your ticks save automatically in this browser.</div>
+  </section>
+  <div class="toolbar">
+    <button type="button" id="expand-all">Expand all</button>
+    <button type="button" id="collapse-all">Collapse all</button>
+    <button type="button" id="print-page">Print checklist</button>
+    <button type="button" id="reset-checks">Reset ticks</button>
+  </div>
+  <section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">0. Keep the old project safe</span>
+        <span class="phase-progress"><span data-phase-count>0/4</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s0-t0">
+          <input id="s0-t0" type="checkbox" data-task checked>
+          <span class="task-copy"><span class="task-title">Confirm the old files are inside V1</span><span class="task-detail">Do not move everything again.</span></span>
+        </label><label class="task" for="s0-t1">
+          <input id="s0-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Make a backup of V1</span><span class="task-detail">Keep the old code, SQL and assets safe.</span></span>
+        </label><label class="task" for="s0-t2">
+          <input id="s0-t2" type="checkbox" data-task checked>
+          <span class="task-copy"><span class="task-title">Open the parent PLENTIQ folder in VS Code</span><span class="task-detail">This is where the new app will be built.</span></span>
+        </label><label class="task" for="s0-t3">
+          <input id="s0-t3" type="checkbox" data-task checked>
+          <span class="task-copy"><span class="task-title">Check that the new build is not using the old database</span><span class="task-detail">The new database will be plentiq_v2_db.</span></span>
+        </label></div>
+    </section><section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">1. Build the first pages</span>
+        <span class="phase-progress"><span data-phase-count>0/5</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s1-t0">
+          <input id="s1-t0" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Build the public landing page</span><span class="task-detail">This appears first. Use the old Plentiq landing design as reference.</span></span>
+        </label><label class="task" for="s1-t1">
+          <input id="s1-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Build the email/password login page</span><span class="task-detail">The landing page should open this page when the user chooses Login.</span></span>
+        </label><label class="task" for="s1-t2">
+          <input id="s1-t2" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Check page navigation and mobile layout</span><span class="task-detail">Buttons and links should have a clear action.</span></span>
+        </label><label class="task" for="s1-t3">
+          <input id="s1-t3" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Make the forms ready for Flask</span><span class="task-detail">Use clear field names and real form structure; do not pretend data is saved.</span></span>
+        </label><label class="task" for="s1-t4">
+          <input id="s1-t4" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Keep the existing Plentiq logo and useful images</span><span class="task-detail">Copy only the assets needed, not the whole old app.</span></span>
+        </label></div>
+    </section><section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">2. Build the main screen designs</span>
+        <span class="phase-progress"><span data-phase-count>0/9</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s2-t0">
+          <input id="s2-t0" type="checkbox" data-task checked>
+          <span class="task-copy"><span class="task-title">Design the donor dashboard</span><span class="task-detail">Show the donor&#x27;s listings, requests and collection activity.</span></span>
+        </label><label class="task" for="s2-t1">
+          <input id="s2-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Design the create/edit food listing page</span><span class="task-detail">Food name, category, source, quantity, unit, expiry and pickup details.</span></span>
+        </label><label class="task" for="s2-t2">
+          <input id="s2-t2" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Design the acceptor dashboard</span><span class="task-detail">Show available food, own requests and collection history.</span></span>
+        </label><label class="task" for="s2-t3">
+          <input id="s2-t3" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Design the food browse/details/request pages</span><span class="task-detail">Allow filters and a requested-quantity form.</span></span>
+        </label><label class="task" for="s2-t4">
+          <input id="s2-t4" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Design the request review page or section</span><span class="task-detail">Donor can approve or reject requests for their own listings.</span></span>
+        </label><label class="task" for="s2-t5">
+          <input id="s2-t5" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Design collection and distribution screens</span><span class="task-detail">Collection follows approval; distribution follows collection.</span></span>
+        </label><label class="task" for="s2-t6">
+          <input id="s2-t6" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Design the admin dashboard</span><span class="task-detail">User accounts, listings, requests, flagged activity and summary counts.</span></span>
+        </label><label class="task" for="s2-t7">
+          <input id="s2-t7" type="checkbox" data-task checked>
+          <span class="task-copy"><span class="task-title">Use sample data while designing</span><span class="task-detail">This tests the look and navigation, not real saving.</span></span>
+        </label><label class="task" for="s2-t8">
+          <input id="s2-t8" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Review the four-step Create Donation flow locally</span><span class="task-detail">Confirm step navigation and photo/location controls in a browser before database design.</span></span>
+        </label></div>
+    </section><section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">3. Plan and create the new database</span>
+        <span class="phase-progress"><span data-phase-count>0/6</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s3-t0">
+          <input id="s3-t0" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">List what data each screen needs to save</span><span class="task-detail">Do this before finalising the tables.</span></span>
+        </label><label class="task" for="s3-t1">
+          <input id="s3-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Review the table design before running SQL</span><span class="task-detail">Suggested tables: users, categories, listings, requests, schedules, distributions, notifications and review/audit records.</span></span>
+        </label><label class="task" for="s3-t2">
+          <input id="s3-t2" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Create the new database plentiq_v2_db</span><span class="task-detail">Do not use the old database.</span></span>
+        </label><label class="task" for="s3-t3">
+          <input id="s3-t3" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Keep schema SQL separate from demo-user setup</span><span class="task-detail">Do not run destructive scripts automatically.</span></span>
+        </label><label class="task" for="s3-t4">
+          <input id="s3-t4" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Create five demo accounts</span><span class="task-detail">1 Admin, 2 Donors, 2 Acceptors.</span></span>
+        </label><label class="task" for="s3-t5">
+          <input id="s3-t5" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Store only password hashes</span><span class="task-detail">Never put plain passwords in HTML or app.py.</span></span>
+        </label></div>
+    </section><section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">4. Connect login to Flask and MySQL</span>
+        <span class="phase-progress"><span data-phase-count>0/6</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s4-t0">
+          <input id="s4-t0" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Set up the new Flask app configuration</span><span class="task-detail">Keep secret keys and database passwords out of source control.</span></span>
+        </label><label class="task" for="s4-t1">
+          <input id="s4-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Connect Flask to plentiq_v2_db</span><span class="task-detail">Test the connection before building more features.</span></span>
+        </label><label class="task" for="s4-t2">
+          <input id="s4-t2" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Check the password hash during login</span><span class="task-detail">Wrong password must fail; do not hardcode a successful login.</span></span>
+        </label><label class="task" for="s4-t3">
+          <input id="s4-t3" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Send each role to the right dashboard</span><span class="task-detail">Admin, Donor and Acceptor have different permissions.</span></span>
+        </label><label class="task" for="s4-t4">
+          <input id="s4-t4" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Test logout and protected pages</span><span class="task-detail">A user must not get protected access after logout.</span></span>
+        </label><label class="task" for="s4-t5">
+          <input id="s4-t5" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Keep demo account switching local-only</span><span class="task-detail">Never allow anyone to freely switch roles in a public deployment.</span></span>
+        </label></div>
+    </section><section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">5. Connect one complete feature at a time</span>
+        <span class="phase-progress"><span data-phase-count>0/8</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s5-t0">
+          <input id="s5-t0" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Donor creates a listing and MySQL saves it</span><span class="task-detail">After reloading, the saved listing remains.</span></span>
+        </label><label class="task" for="s5-t1">
+          <input id="s5-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Acceptor sees the saved listing</span><span class="task-detail">The acceptor view reads from the same database.</span></span>
+        </label><label class="task" for="s5-t2">
+          <input id="s5-t2" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Acceptor submits a quantity request</span><span class="task-detail">Reject zero, negative, non-number and over-available amounts.</span></span>
+        </label><label class="task" for="s5-t3">
+          <input id="s5-t3" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Donor approves or rejects the request</span><span class="task-detail">Approval reduces quantity once; rejection does not reduce it.</span></span>
+        </label><label class="task" for="s5-t4">
+          <input id="s5-t4" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Prevent duplicate and suspicious submissions</span><span class="task-detail">Flag repeated patterns for Admin review; do not automatically assume guilt.</span></span>
+        </label><label class="task" for="s5-t5">
+          <input id="s5-t5" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Schedule collection after approval</span><span class="task-detail">Do not allow an invalid or past pickup time.</span></span>
+        </label><label class="task" for="s5-t6">
+          <input id="s5-t6" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Record collection and then distribution</span><span class="task-detail">Distribution cannot exceed the approved/collected amount.</span></span>
+        </label><label class="task" for="s5-t7">
+          <input id="s5-t7" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Show updated information after reload</span><span class="task-detail">Every role should see the latest saved state.</span></span>
+        </label></div>
+    </section><section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">6. Admin, location and notifications</span>
+        <span class="phase-progress"><span data-phase-count>0/7</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s6-t0">
+          <input id="s6-t0" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Let Admin review/disable accounts</span><span class="task-detail">Record the reason for suspension or reinstatement.</span></span>
+        </label><label class="task" for="s6-t1">
+          <input id="s6-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Show flagged activity to Admin</span><span class="task-detail">Show what happened, when, and the review result.</span></span>
+        </label><label class="task" for="s6-t2">
+          <input id="s6-t2" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Add expiry checks</span><span class="task-detail">Expired or unavailable food cannot be requested.</span></span>
+        </label><label class="task" for="s6-t3">
+          <input id="s6-t3" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Start nearby matching with city/area</span><span class="task-detail">Add a map/geocoding API only if it is needed.</span></span>
+        </label><label class="task" for="s6-t4">
+          <input id="s6-t4" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Choose a configurable nearby distance</span><span class="task-detail">Do not hardcode an unchangeable radius.</span></span>
+        </label><label class="task" for="s6-t5">
+          <input id="s6-t5" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Store in-app notifications in MySQL</span><span class="task-detail">Notify only opted-in acceptors for available, unexpired food within range.</span></span>
+        </label><label class="task" for="s6-t6">
+          <input id="s6-t6" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Keep exact user locations private</span><span class="task-detail">Ask permission where needed; do not display precise locations publicly.</span></span>
+        </label></div>
+    </section><section class="phase" data-phase>
+      <button class="phase-heading" type="button" aria-expanded="true">
+        <span class="phase-title">7. Final checks for the college demo</span>
+        <span class="phase-progress"><span data-phase-count>0/7</span><span class="chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="phase-body"><label class="task" for="s7-t0">
+          <input id="s7-t0" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Test correct and incorrect login</span><span class="task-detail">Check all three roles.</span></span>
+        </label><label class="task" for="s7-t1">
+          <input id="s7-t1" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Test the full food-to-distribution flow</span><span class="task-detail">Listing → request → decision → collection → distribution.</span></span>
+        </label><label class="task" for="s7-t2">
+          <input id="s7-t2" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Test expired food and invalid quantities</span><span class="task-detail">The server must reject them, not just the browser.</span></span>
+        </label><label class="task" for="s7-t3">
+          <input id="s7-t3" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Test two requests competing for the same quantity</span><span class="task-detail">The app must never allocate more food than exists.</span></span>
+        </label><label class="task" for="s7-t4">
+          <input id="s7-t4" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Check SQL tables and query results</span><span class="task-detail">Use a separate test/demo dataset; never expose passwords.</span></span>
+        </label><label class="task" for="s7-t5">
+          <input id="s7-t5" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Save a Git checkpoint after a working milestone</span><span class="task-detail">Do not commit .env files or passwords.</span></span>
+        </label><label class="task" for="s7-t6">
+          <input id="s7-t6" type="checkbox" data-task>
+          <span class="task-copy"><span class="task-title">Update the project notes</span><span class="task-detail">Record what works, what was tested and the next task.</span></span>
+        </label></div>
+    </section>
+  <footer class="footer"><strong>Remember:</strong> one shared database for the app—not one database per page. Save a Git checkpoint when a stage works.</footer>
+</main>
+<script>
+(function(){
+  const storageKey='plentiq-project-checklist-v1';
+  const boxes=[...document.querySelectorAll('[data-task]')];
+  function load(){try{const saved=JSON.parse(localStorage.getItem(storageKey)||'{}');boxes.forEach(b=>{b.checked=!!saved[b.id]})}catch(e){/* Checklist still works if browser storage is unavailable. */}}
+  function save(){try{const data={};boxes.forEach(b=>data[b.id]=b.checked);localStorage.setItem(storageKey,JSON.stringify(data))}catch(e){/* Current ticks remain active until the page is closed. */}update()}
+  function update(){
+    const done=boxes.filter(b=>b.checked).length,total=boxes.length,pct=total?Math.round(done/total*100):0;
+    document.getElementById('overall-count').textContent=done+' of '+total+' complete';
+    document.getElementById('progress-fill').style.width=pct+'%';
+    document.getElementById('progress-bar').setAttribute('aria-valuenow',pct);
+    document.getElementById('progress-message').textContent=pct===100?'Everything is checked off. Review the app and run the final tests.':done===0?'Start with Stage 0. Your ticks save automatically in this browser.':pct+'% complete. Finish the current stage before jumping ahead.';
+    document.querySelectorAll('[data-phase]').forEach(phase=>{
+      const phaseBoxes=[...phase.querySelectorAll('[data-task]')];
+      phase.querySelector('[data-phase-count]').textContent=phaseBoxes.filter(b=>b.checked).length+'/'+phaseBoxes.length;
+    });
+  }
+  boxes.forEach(b=>b.addEventListener('change',save));
+  document.querySelectorAll('.phase-heading').forEach(btn=>btn.addEventListener('click',()=>{
+    const body=btn.nextElementSibling,open=btn.getAttribute('aria-expanded')==='true';
+    btn.setAttribute('aria-expanded',String(!open));body.classList.toggle('collapsed',open);
+  }));
+  document.getElementById('expand-all').addEventListener('click',()=>document.querySelectorAll('.phase-heading').forEach(b=>{b.setAttribute('aria-expanded','true');b.nextElementSibling.classList.remove('collapsed')}));
+  document.getElementById('collapse-all').addEventListener('click',()=>document.querySelectorAll('.phase-heading').forEach(b=>{b.setAttribute('aria-expanded','false');b.nextElementSibling.classList.add('collapsed')}));
+  document.getElementById('print-page').addEventListener('click',()=>window.print());
+  document.getElementById('reset-checks').addEventListener('click',()=>{if(confirm('Clear every completed checkbox?')){boxes.forEach(b=>b.checked=false);save()}});
+  load();update();
+})();
+</script>
+</body>
+</html>

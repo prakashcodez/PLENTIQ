@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Collection receipt {{ receipt.receipt_number }} · Plentiq</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; color: #17382d; background: #f3f6f1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 36px 16px; }
+    .receipt { width: min(760px, 100%); margin: 0 auto; border: 1px solid #dce7dd; border-radius: 18px; padding: 42px; background: #fff; box-shadow: 0 16px 45px rgb(20 52 37 / 9%); }
+    .brand { display: flex; align-items: center; gap: 14px; padding-bottom: 24px; border-bottom: 2px solid #d9ecdf; }
+    .brand img { width: 142px; height: auto; object-fit: contain; }
+    .brand span { margin-left: auto; color: #527061; font-size: .9rem; }
+    h1 { margin: 28px 0 7px; color: #0d4935; font-size: clamp(1.7rem, 4vw, 2.2rem); }
+    .intro { margin: 0; color: #62756a; line-height: 1.6; }
+    .receipt-state { display: inline-block; margin-top: 22px; border-radius: 999px; padding: 7px 12px; color: #075d3d; background: #e3f5e9; font-size: .83rem; font-weight: 700; }
+    dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; margin: 25px 0; border-top: 1px solid #e7eee8; }
+    dl div { padding: 14px 0; border-bottom: 1px solid #e7eee8; }
+    dt { margin-bottom: 5px; color: #718177; font-size: .78rem; }
+    dd { margin: 0; color: #1c3c2f; font-weight: 700; overflow-wrap: anywhere; }
+    .disclaimer { border-left: 3px solid #e6a044; padding: 10px 13px; color: #71582d; background: #fff9ed; font-size: .83rem; line-height: 1.55; }
+    .actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 28px; }
+    .actions a, .actions button { border: 1px solid #c9ddd0; border-radius: 9px; padding: 11px 15px; color: #075d42; background: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+    .actions button { border-color: #075d42; color: #fff; background: #075d42; }
+    @media (max-width: 560px) { body { padding: 12px; } .receipt { padding: 24px 18px; } dl { grid-template-columns: 1fr; } .brand { align-items: flex-start; flex-direction: column; } .brand span { margin-left: 0; } .actions { flex-direction: column; } }
+    @media print {
+      :root { background: #fff; }
+      body { padding: 0; }
+      .receipt { width: 100%; border: 0; border-radius: 0; padding: 10mm; box-shadow: none; }
+      .actions { display: none; }
+      .disclaimer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="receipt">
+    <header class="brand">
+      <img src="{{ url_for('static', filename='images/plentiq-logo.png') }}" alt="Plentiq">
+      <span>Food shared with purpose</span>
+    </header>
+    <h1>Food donation collection receipt</h1>
+    <p class="intro">A record of a completed food handover recorded in Plentiq.</p>
+    <span class="receipt-state">Collection recorded</span>
+    <dl>
+      <div><dt>Receipt reference</dt><dd>{{ receipt.receipt_number }}</dd></div>
+      <div><dt>Donation ID</dt><dd>#{{ receipt.donation_id }}</dd></div>
+      <div><dt>Collection ID</dt><dd>#{{ receipt.collection_id }}</dd></div>
+      <div><dt>Pickup recorded</dt><dd>{{ receipt.collected_at.strftime('%d %B %Y, %I:%M %p') }}</dd></div>
+      <div><dt>Donor</dt><dd>{{ receipt.donor_name }}</dd></div>
+      <div><dt>Recipient</dt><dd>{{ receipt.recipient_name }}</dd></div>
+      <div><dt>Food item</dt><dd>{{ receipt.food_name }}</dd></div>
+      <div><dt>Category and food type</dt><dd>{{ receipt.category }} · {{ receipt.diet }}</dd></div>
+      <div><dt>Quantity recorded as collected</dt><dd>{{ receipt.quantity }} {{ receipt.unit }}</dd></div>
+      <div><dt>Pickup area</dt><dd>{{ receipt.area }}, {{ receipt.city }}</dd></div>
+    </dl>
+    <p class="disclaimer">This document confirms the collection status and quantity recorded in Plentiq. It is not a tax certificate, monetary valuation, or independent food-safety certification.</p>
+    <nav class="actions" aria-label="Receipt actions">
+      <a href="{{ url_for('donor_collections', status='collected') }}">Back to collections</a>
+      <button type="button" data-print-receipt>Print / Save as PDF</button>
+    </nav>
+  </main>
+  <script>document.querySelector('[data-print-receipt]').addEventListener('click', () => window.print());</script>
+</body>
+</html>

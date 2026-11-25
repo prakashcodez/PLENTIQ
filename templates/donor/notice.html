@@ -1,0 +1,5 @@
+{% extends 'donor/base.html' %}
+{% set page_title = page_title %}
+{% block content %}
+  <section class="notice-card"><h1>{{ page_title }}</h1><p>{{ message }}</p><a class="button button-primary" href="{{ url_for('login') }}">Go to sign in</a><a class="secondary-button" href="{{ donor_url('donor_dashboard') }}" style="margin-left:8px">Back to dashboard</a></section>
+{% endblock %}

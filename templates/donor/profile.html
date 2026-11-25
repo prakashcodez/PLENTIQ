@@ -1,0 +1,30 @@
+{% extends 'donor/base.html' %}
+{% set page_title = 'Donor Profile' %}
+{% block content %}
+  <header class="page-heading"><div><h1>Donor Profile</h1><p>Save your default contact and pickup location. New donations will start with these details.</p></div></header>
+  <section class="panel content-panel">
+    {% if notice %}<p class="form-alert" role="status">{{ notice }}</p>{% endif %}
+    <form class="profile-form donor-profile-form" data-location-picker action="{{ url_for('donor_profile') }}" method="post">
+      <h2 class="profile-section-title">Contact details</h2>
+      <div class="form-grid profile-form-grid">
+        <div class="field"><label for="donor-type">Donor type</label><select id="donor-type" name="donor_type" required><option value="">Choose your donor type</option>{% for option in ['Individual', 'Restaurant or hotel', 'Catering service', 'Event host', 'Business or institution', 'Household', 'Other'] %}<option value="{{ option }}" {% if values.get('donor_type') == option %}selected{% endif %}>{{ option }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="profile-email">Email address</label><input id="profile-email" type="email" value="{{ values.get('email', '') }}" readonly aria-describedby="profile-email-help"><small id="profile-email-help" class="field-help">This is your sign-in email.</small></div>
+        <div class="field"><label for="profile-phone">Contact phone</label><input id="profile-phone" name="phone" type="tel" inputmode="tel" maxlength="32" value="{{ values.get('phone', '') }}" placeholder="Phone number" required></div>
+      </div>
+
+      <div class="profile-location-heading"><div><h2 class="profile-section-title">Default pickup location</h2><p>Nearby acceptors use your coordinates to find donations within 25 km.</p></div><button class="button button-outline" type="button" data-current-location><span class="material-icons-round" aria-hidden="true">my_location</span>Use my current location</button></div>
+      <p class="location-status" data-location-status role="status" aria-live="polite">{% if values.latitude is not none and values.longitude is not none %}Saved coordinates are ready for nearby matching.{% else %}Choose your current location or enter coordinates manually.{% endif %}</p>
+      <div class="profile-location-layout">
+        <div class="form-grid profile-location-fields">
+          <div class="field"><label for="profile-city">City</label><input id="profile-city" name="city" data-location-search type="text" maxlength="100" value="{{ values.get('city', '') }}" placeholder="City" required></div>
+          <div class="field"><label for="profile-area">Area / neighbourhood</label><input id="profile-area" name="area" data-location-search type="text" maxlength="120" value="{{ values.get('area', '') }}" placeholder="Area" required></div>
+          <div class="field field-full"><label for="profile-landmark">Landmark <span class="optional">(optional)</span></label><input id="profile-landmark" name="landmark" data-location-search type="text" maxlength="160" value="{{ values.get('landmark', '') }}" placeholder="Nearby landmark"></div>
+          <div class="field field-full"><label for="profile-address">Full pickup address <span class="optional">(optional default)</span></label><textarea id="profile-address" name="address" data-location-search rows="3" maxlength="500" placeholder="Street, building, and pickup instructions">{{ values.get('address', '') }}</textarea></div>
+          <details class="coordinate-details field-full"><summary>Enter coordinates manually <span class="optional">(if location access is unavailable)</span></summary><div class="coordinate-grid"><div class="field"><label for="profile-latitude">Latitude</label><input id="profile-latitude" type="number" name="latitude" data-location-latitude min="-90" max="90" step="any" value="{{ values.latitude if values.latitude is not none else '' }}" placeholder="e.g. 17.3850"></div><div class="field"><label for="profile-longitude">Longitude</label><input id="profile-longitude" type="number" name="longitude" data-location-longitude min="-180" max="180" step="any" value="{{ values.longitude if values.longitude is not none else '' }}" placeholder="e.g. 78.4867"></div></div></details>
+        </div>
+        <aside class="pickup-map-panel" aria-label="Default pickup map preview"><div class="map-preview"><iframe data-map-frame title="Map preview of your default pickup location" loading="lazy" hidden></iframe><div class="map-preview-empty" data-map-empty><span class="material-icons-round" aria-hidden="true">map</span><strong>Pickup location map</strong><p>Use your current location to preview this area.</p></div></div><a class="map-link" data-location-map-link href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer"><span class="material-icons-round" aria-hidden="true">open_in_new</span>Open location map</a></aside>
+      </div>
+      <div class="form-actions"><button class="button button-primary" type="submit">Save Profile &amp; Location</button></div>
+    </form>
+  </section>
+{% endblock %}

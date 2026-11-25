@@ -1,0 +1,23 @@
+{% extends 'donor/base.html' %}
+{% block content %}
+  <header class="page-heading"><div><h1>{{ page_title }}</h1><p>{{ page_intro }}</p></div>{% if record_type == 'requests' %}<a class="secondary-button" href="{{ donor_url('donor_requests', status='all') }}">View all requests</a>{% endif %}</header>
+  <section class="panel content-panel">
+    {% if record_type == 'requests' %}
+      <nav class="filter-tabs" aria-label="Filter requests" style="margin-bottom: 15px"><a class="{{ 'is-selected' if status_filter == 'pending' else '' }}" href="{{ donor_url('donor_requests', status='pending') }}">Pending</a><a class="{{ 'is-selected' if status_filter == 'all' else '' }}" href="{{ donor_url('donor_requests', status='all') }}">All requests</a></nav>
+    {% endif %}
+    {% if records %}
+      {% if demo_mode %}<span class="demo-label">Visual examples · not saved</span>{% endif %}
+      <div class="list-records">
+      {% for item in records %}
+        {% if record_type == 'requests' %}
+        <article class="listing-card request-record"><img src="{{ url_for('static', filename='images/' ~ item.image) }}" alt="{{ item.image_alt }}"><div><h2>{{ item.acceptor_name }}</h2><p>Requested {{ item.quantity }} {{ item.unit }} of {{ item.food_name }}</p><div class="listing-meta"><span>{{ item.elapsed }}</span><span>Listing: {{ item.food_name }}</span></div><a class="view-link" href="{{ donor_url('donor_donation_detail', donation_id=item.donation_id) }}">View related donation <span aria-hidden="true">→</span></a></div><span class="status-pill status-pending">Pending</span></article>
+        {% else %}
+        <article class="listing-card"><div><h2>{{ item.title|default('Update') }}</h2><p>{{ item.description|default('') }}</p><div class="listing-meta"><span>{{ item.date|default('') }}</span></div></div></article>
+        {% endif %}
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="records-empty"><div><h2>{% if record_type == 'requests' %}No pending requests yet{% elif record_type == 'collections' %}No collections to show{% else %}No notifications yet{% endif %}</h2><p>{% if record_type == 'requests' %}When an acceptor requests one of your saved food listings, it will appear here. The preview contains no real request records.{% elif record_type == 'collections' %}Collection schedules will appear here after requests, donor accounts, and database storage are connected.{% else %}There are no stored notifications in this preview. New in-app updates will appear here after notification storage is connected.{% endif %}</p>{% if record_type == 'requests' %}<a class="button button-primary" href="{{ donor_url('donor_donations') }}">View donations <span aria-hidden="true">→</span></a>{% endif %}</div></div>
+    {% endif %}
+  </section>
+{% endblock %}

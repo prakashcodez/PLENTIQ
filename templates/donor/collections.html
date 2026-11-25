@@ -1,0 +1,71 @@
+{% extends 'donor/base.html' %}
+{% set page_title = 'Collections' %}
+{% block content %}
+  <header class="page-heading">
+    <div>
+      <p class="step-kicker">Donor workspace</p>
+      <h1>Collections</h1>
+      <p>Coordinate approved pickups, see who is collecting, and confirm completed handovers.</p>
+    </div>
+  </header>
+  {% if not pickup_pin_ready %}<div class="collection-window-ended" role="status">Pickup PIN setup is not active. Apply <code>database_migrations/009_pickup_verification.sql</code> in MySQL Workbench, then restart the app.</div>{% elif not collection_confirmation_ready %}<div class="collection-window-ended" role="status">Two-party collection confirmation is not active. Apply <code>database_migrations/010_two_party_collection_confirmation.sql</code> in MySQL Workbench, then restart the app.</div>{% endif %}
+  <nav class="donation-tabs acceptor-status-tabs" aria-label="Filter collections">
+    {% for code, label in [('all','All'),('scheduled','Yet to collect'),('window_ended','Window ended'),('collected','Collected'),('missed','Missed'),('cancelled','Cancelled')] %}
+      <a class="donation-tab {{ 'is-selected' if status_filter == code else '' }}" href="{{ donor_url('donor_collections', status=code) }}"><span>{{ label }}</span></a>
+    {% endfor %}
+  </nav>
+  <section class="donor-collection-list" aria-label="Approved collections">
+    {% for item in records %}
+      <article class="donor-collection-card panel">
+        <header class="collection-card-heading">
+          <div>
+            <span class="status-pill status-{{ 'expiring' if item.is_overdue else 'active' if item.status_key == 'scheduled' else 'completed' if item.status_key == 'collected' else 'cancelled' if item.status_key == 'cancelled' else 'expiring' }}">{{ item.status }}</span>
+            <h2>{{ item.food_name }}</h2>
+            <p>{{ item.category }} &middot; {{ item.quantity }} {{ item.unit }}</p>
+          </div>
+          <span class="collection-location">{{ item.area }}, {{ item.city }}</span>
+        </header>
+        <div class="collection-contact">
+          <div><strong>Acceptor</strong><span>{{ item.acceptor_name }}</span></div>
+          <div><strong>Phone</strong>{% if item.acceptor_phone %}<a href="tel:{{ item.acceptor_phone }}">{{ item.acceptor_phone }}</a>{% else %}<span>Not provided</span>{% endif %}</div>
+          <div><strong>Pickup address</strong><span>{{ item.pickup_address }}</span></div>
+        </div>
+        <p class="collection-window">Pickup window: {{ item.pickup_starts_at.strftime('%d %b %Y, %I:%M %p') if item.pickup_starts_at else 'Not set' }} &ndash; {{ item.safe_deadline.strftime('%d %b %Y, %I:%M %p') if item.safe_deadline else 'Not set' }}</p>
+        {% if item.is_overdue and item.donor_confirmed_at %}<p class="collection-window-ended" role="status">The pickup window ended after the donor PIN check. The acceptor can still confirm receipt to complete the handover.</p>{% elif item.is_overdue %}<p class="collection-window-ended" role="status">This pickup window ended. You can still confirm a handover that happened, or record that it was missed.</p>{% endif %}
+        {% if item.scheduled_at %}<p class="collection-scheduled"><strong>Agreed pickup:</strong> {{ item.scheduled_at.strftime('%d %b %Y, %I:%M %p') }}</p>{% endif %}
+        {% if item.collected_at %}<p class="collection-scheduled"><strong>Collected:</strong> {{ item.collected_at.strftime('%d %b %Y, %I:%M %p') }}</p><a class="button button-outline collection-receipt-link" href="{{ url_for('donor_collection_receipt', collection_id=item.id) }}">Print collection receipt</a>{% endif %}
+        {% if item.status_key == 'scheduled' and item.donor_confirmed_at %}<p class="collection-window-ended" role="status">PIN verified. Waiting for {{ item.acceptor_name }} to confirm receipt in their My Collections page.</p>{% endif %}
+        {% if item.status_key == 'scheduled' %}
+          <div class="collection-actions">
+            {% if not item.is_overdue and not item.donor_confirmed_at %}
+              <form class="collection-schedule-form" method="post" action="{{ url_for('donor_schedule_collection', collection_id=item.id) }}">
+                <label for="pickup-{{ item.id }}">Agreed pickup time</label>
+                <input id="pickup-{{ item.id }}" type="datetime-local" name="scheduled_pickup_at" required min="{{ item.minimum_schedule_at.strftime('%Y-%m-%dT%H:%M') }}" max="{{ item.safe_deadline.strftime('%Y-%m-%dT%H:%M') if item.safe_deadline else '' }}" value="{{ item.scheduled_at.strftime('%Y-%m-%dT%H:%M') if item.scheduled_at else '' }}">
+                <button class="button button-outline" type="submit">{{ 'Update time' if item.scheduled_at else 'Set pickup time' }}</button>
+              </form>
+            {% endif %}
+            {% if item.can_mark_collected and pickup_pin_ready and collection_confirmation_ready %}
+              <button class="button button-primary" type="button" data-open-pickup-pin="pickup-pin-dialog-{{ item.id }}">Verify PIN &amp; confirm handover</button>
+              <dialog class="pickup-pin-dialog" id="pickup-pin-dialog-{{ item.id }}" aria-labelledby="pickup-pin-title-{{ item.id }}">
+                <form method="post" action="{{ url_for('donor_update_collection', collection_id=item.id, action='collected') }}" class="pickup-pin-form">
+                  <h2 id="pickup-pin-title-{{ item.id }}">Confirm food collection</h2>
+                  <p>Ask the acceptor for the four-digit PIN shown in My Collections. After you verify it, the acceptor confirms receipt to complete the handover.</p>
+                  <label for="pickup-pin-input-{{ item.id }}">Acceptor's pickup PIN</label>
+                  <div class="pickup-pin-entry"><input id="pickup-pin-input-{{ item.id }}" type="password" name="pickup_pin" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required><button class="pickup-pin-visibility" type="button" data-toggle-pickup-pin="pickup-pin-input-{{ item.id }}" aria-pressed="false">Show PIN</button></div>
+                  <div class="pickup-pin-dialog-actions"><button class="button button-outline" type="button" data-close-pickup-pin>Cancel</button><button class="button button-primary" type="submit">Verify PIN</button></div>
+                </form>
+              </dialog>
+            {% elif item.can_mark_collected and not pickup_pin_ready %}<span class="collection-window-ended">Apply migration 009 to enable PIN verification.</span>
+            {% elif item.can_mark_collected and not collection_confirmation_ready %}<span class="collection-window-ended">Apply migration 010 to enable two-party confirmation.</span>
+            {% endif %}
+            {% if item.can_mark_missed %}<form method="post" action="{{ url_for('donor_update_collection', collection_id=item.id, action='missed') }}"><button class="button button-outline" type="submit">Mark missed</button></form>{% endif %}
+            {% if item.can_cancel %}<form method="post" action="{{ url_for('donor_update_collection', collection_id=item.id, action='cancelled') }}"><button class="button button-outline" type="submit">Cancel pickup</button></form>{% endif %}
+          </div>
+        {% endif %}
+        <details class="report-disclosure"><summary>Report a problem</summary><form class="report-form" method="post" action="{{ url_for('donor_report_request', request_id=item.request_id) }}"><label>Reason<select name="reason_code" required>{% for reason in report_reasons %}<option value="{{ reason.code }}">{{ reason.label }}</option>{% endfor %}</select></label><label>Details (optional)<textarea name="details" rows="2" maxlength="1000" placeholder="Add context for the admin team"></textarea></label><input type="hidden" name="return_to" value="collections"><button class="button button-outline" type="submit" {% if not report_reasons %}disabled{% endif %}>Send report</button></form></details>
+      </article>
+    {% else %}
+      <div class="records-empty"><div><h2>{% if status_filter == 'window_ended' %}No ended pickup windows{% elif status_filter == 'all' %}No collections yet{% else %}No {{ status_filter|replace('_', ' ') }} collections{% endif %}</h2><p>Approved requests and their pickup coordination will appear here.</p>{% if status_filter == 'all' %}<a class="button button-primary" href="{{ donor_url('donor_requests', status='pending') }}">Review requests</a>{% endif %}</div></div>
+    {% endfor %}
+  </section>
+{% endblock %}

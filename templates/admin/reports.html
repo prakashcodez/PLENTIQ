@@ -1,0 +1,26 @@
+{% extends 'admin/base.html' %}
+{% set page_title = 'Reports' %}
+{% block content %}
+  <header class="admin-page-heading"><div><p class="admin-eyebrow">TRUST &amp; SAFETY</p><h1>Reports</h1><p>Review reports submitted about account activity and record your decision.</p></div><span class="admin-page-count">{{ reports|length }} report{{ '' if reports|length == 1 else 's' }} shown</span></header>
+  <section class="admin-panel admin-filter-panel"><form class="admin-filter-form" method="get" action="{{ url_for('admin_reports') }}">
+    <label class="admin-search-field"><span class="sr-only">Search reports</span><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Search people or report reason"></label>
+    <label class="admin-select-field"><span class="sr-only">Filter report status</span><select name="status"><option value="open" {{ 'selected' if status_filter == 'open' else '' }}>Open</option><option value="under_review" {{ 'selected' if status_filter == 'under_review' else '' }}>Under review</option><option value="resolved" {{ 'selected' if status_filter == 'resolved' else '' }}>Resolved</option><option value="dismissed" {{ 'selected' if status_filter == 'dismissed' else '' }}>Dismissed</option><option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All reports</option></select></label>
+    <button class="admin-button admin-button-primary" type="submit">Apply filters</button><a class="admin-button admin-button-light" href="{{ url_for('admin_reports') }}">Reset</a>
+  </form></section>
+  {% if page_error %}<div class="admin-alert" role="alert">{{ page_error }}</div>{% endif %}
+  <section class="admin-report-grid">
+    {% for report in reports %}<article class="admin-report-card admin-panel">
+      <header class="admin-report-card-heading"><span class="admin-report-number">Report #{{ report[0] }}</span><span class="admin-status status-{{ report[10] }}">{{ report[10].replace('_', ' ').title() }}</span></header>
+      <div class="admin-report-reason"><span aria-hidden="true">⚑</span><div><small>Reason</small><h2>{{ report[8] }}</h2></div></div>
+      <div class="admin-report-parties"><div><small>Reported by</small><strong>{{ report[4] }}</strong><small>Account #{{ report[3] }}</small></div><span aria-hidden="true">→</span><div><small>Reported account</small><strong>{{ report[6] }}</strong><small>Account #{{ report[5] }} · {{ report[7].title() }}</small></div></div>
+      {% if report[9] %}<div class="admin-report-details"><small>Details</small><p>{{ report[9] }}</p></div>{% endif %}
+      <div class="admin-report-context"><span>Request #{{ report[1] }}</span>{% if report[2] %}<span>Collection #{{ report[2] }}</span>{% endif %}<span>Submitted {{ report[11].strftime('%d %b %Y, %I:%M %p') }}</span></div>
+      {% if report[10] in ['open', 'under_review'] %}<form class="admin-review-form" method="post" action="{{ url_for('admin_report_review', report_id=report[0]) }}">
+        <label><span>Review status</span><select name="status"><option value="under_review" {{ 'selected' if report[10] == 'under_review' else '' }}>Under review</option><option value="resolved">Resolve report</option><option value="dismissed">Dismiss report</option></select></label>
+        <label><span>Review note <small>(optional)</small></span><textarea name="resolution_note" maxlength="1000" rows="2" placeholder="Add a concise decision note"></textarea></label>
+        <button class="admin-button admin-button-primary" type="submit">Save review</button>
+      </form>{% elif report[12] %}<div class="admin-review-note"><small>Resolution note</small><p>{{ report[12] }}</p></div>{% endif %}
+      <a class="admin-text-link" href="{{ url_for('admin_users', q=report[6]) }}">View reported account →</a>
+    </article>{% else %}<div class="admin-panel admin-empty-state admin-reports-empty"><span aria-hidden="true">✓</span><h2>No reports in this view</h2><p>New reports will appear here. Use the status filter to see closed reports.</p></div>{% endfor %}
+  </section>
+{% endblock %}

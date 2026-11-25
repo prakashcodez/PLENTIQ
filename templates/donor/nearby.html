@@ -1,0 +1,9 @@
+{% extends 'donor/base.html' %}
+{% set page_title = 'Nearby Acceptor Needs' %}
+{% block content %}
+  <header class="page-heading"><div><p class="step-kicker">Donor workspace</p><h1>Nearby Acceptor Needs</h1><p>Food needs within 25 km of your saved profile or active donation locations.</p></div></header>
+  {% if location %}
+    {% if needs %}<section class="donor-needs-grid" aria-label="Nearby acceptor food needs">{% for need in needs %}<article class="donor-need-card panel"><div class="donor-need-top"><span class="material-icons-round" aria-hidden="true">volunteer_activism</span><span>{{ need.distance_km }} km away</span></div><p class="donor-need-organisation">{{ need.organisation }}</p><h2>{{ need.categories }}</h2><p class="donor-need-diet">{{ need.diet }} · {{ need.people_count }} people</p><div class="donor-need-meta"><span>{{ need.city }} · {{ need.area }}</span><span>{{ need.needed_for.strftime('%d %b %Y') }}{% if need.meal_period %} · {{ need.meal_period.title() }}{% else %} · Any meal{% endif %}</span></div><a class="button button-outline donor-need-action" href="{{ donor_url('donor_create_donation') }}">Create a donation</a></article>{% endfor %}</section>
+    {% else %}<div class="records-empty"><div><h2>No open needs within 25 km yet</h2><p>New acceptor needs appear here when they match your saved profile or active donation location.</p></div></div>{% endif %}
+  {% else %}<div class="records-empty"><div><h2>Save your location to find nearby needs</h2><p>Plentiq uses your saved profile location or an active donation location to calculate the 25 km range. Exact acceptor locations are not shown.</p><a class="button button-primary" href="{{ donor_url('donor_profile') }}">Set profile location</a></div></div>{% endif %}
+{% endblock %}

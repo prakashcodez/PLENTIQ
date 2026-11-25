@@ -1,0 +1,86 @@
+{% extends 'donor/base.html' %}
+{% set page_title = 'Donor Dashboard' %}
+{% block content %}
+  <section class="welcome-banner" aria-labelledby="welcome-title">
+    <img src="{{ url_for('static', filename='images/food-donation.png') }}" alt="Fresh food prepared to be shared with a local community">
+    <div class="welcome-shade"></div>
+    <div class="welcome-copy">
+      <p class="welcome-kicker">Food shared with purpose</p>
+      <h1 id="welcome-title">Welcome Back! <span aria-hidden="true">✦</span></h1>
+      <p>Thank you for continuing to share surplus food and make a difference.</p>
+      <span class="welcome-rule" aria-hidden="true"></span>
+    </div>
+    <span class="welcome-caption">Share Food <span aria-hidden="true">♡</span><br>Create Impact</span>
+    {% if not demo_mode %}<a class="welcome-preview" href="{{ url_for('donor_dashboard', demo='1') }}">Preview sample data</a>{% endif %}
+  </section>
+
+  <section class="stats-grid" aria-label="Donation summary">
+    <a class="stat-card stat-green" href="{{ donor_url('donor_donations', status='active') }}"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 7 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V7M12 11v10"/></svg></span><span class="stat-copy"><strong>{{ stats.active }}</strong><span>Active Donations</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+    <a class="stat-card stat-amber" href="{{ donor_url('donor_requests', status='pending') }}"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v5h5M9 13h6m-6 4h6"/></svg></span><span class="stat-copy"><strong>{{ stats.pending }}</strong><span>Pending Requests</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+    <a class="stat-card stat-blue" href="{{ donor_url('donor_collections', status='completed') }}"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h12v11H3zM15 11h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></span><span class="stat-copy"><strong>{{ stats.completed }}</strong><span>Completed Collections</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+    <a class="stat-card stat-coral" href="{{ donor_url('donor_donations', status='expiring') }}"><span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 8v5l3 2M9 2h6"/></svg></span><span class="stat-copy"><strong>{{ stats.expiring }}</strong><span>Expiring Soon</span></span><span class="stat-arrow" aria-hidden="true">›</span></a>
+  </section>
+
+  <div class="dashboard-grid">
+    <section class="panel recent-panel" aria-labelledby="recent-title">
+      <div class="panel-heading">
+        <h2 id="recent-title"><span class="heading-sprout" aria-hidden="true">✦</span> Recent Donations</h2>
+        <a class="view-link" href="{{ donor_url('donor_donations') }}">View All <span aria-hidden="true">→</span></a>
+      </div>
+      {% if donations %}
+      <div class="donation-table-wrap">
+        <div class="donation-table-head" aria-hidden="true"><span>Food Item</span><span>Quantity</span><span>Unit</span><span>Expiry / Pickup Deadline</span><span>Status</span></div>
+        <div class="donation-rows">
+        {% for item in donations %}
+          <a class="donation-row" href="{{ donor_url('donor_donation_detail', donation_id=item.id) }}" aria-label="View {{ item.food_name }} donation details">
+            <span class="food-cell"><img src="{{ url_for('static', filename=(item.uploaded_image or ('images/' ~ item.image))) }}" alt="{{ item.image_alt }}"><span class="food-cell-copy"><strong>{{ item.food_name }}</strong><span class="food-tags"><span>{{ item.category }}</span><span>{{ item.diet }}</span></span><small>{{ item.description }}</small><span class="food-location"><span aria-hidden="true">⌖</span> {{ item.area }}, {{ item.city }}</span></span></span>
+            <span class="quantity-cell"><strong>{{ item.quantity }}</strong></span>
+            <span class="unit-cell">{{ item.unit }}</span>
+            <span class="deadline-cell"><span class="mobile-field-label">Pickup deadline</span>{{ item.deadline_label }}</span>
+            <span class="status-cell"><span class="status-pill {{ 'status-expiring' if item.status_key == 'expiring' else 'status-active' }}">{{ item.status }}</span><span class="row-chevron" aria-hidden="true">›</span></span>
+          </a>
+        {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-art" aria-hidden="true"><svg viewBox="0 0 120 100"><path d="M13 42 60 19l47 23-47 24-47-24Z"/><path d="M13 42v34l47 23 47-23V42M60 66v33"/><path d="M48 33c0-10 7-17 12-19 5 2 12 9 12 19M60 30c-10-9-18-6-20 0 7 7 14 8 20 5m0-5c10-9 18-6 20 0-7 7-14 8-20 5"/></svg></div>
+        <h3>No donations yet</h3>
+        <p>Your saved food donations will appear here.</p>
+        <a class="button button-primary" href="{{ donor_url('donor_create_donation') }}">Create your first donation <span aria-hidden="true">→</span></a>
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="dashboard-side" aria-label="Donation activity">
+      <section class="create-promo" aria-label="Create a donation">
+        <img src="{{ url_for('static', filename='images/food-fruit.png') }}" alt="Fresh produce ready to be shared">
+        <div class="promo-overlay"></div>
+        <div class="promo-copy"><h2>Every Meal Shared<br>Creates a Happier Tomorrow</h2><p>Share surplus food and help communities in need.</p><a class="promo-button" href="{{ donor_url('donor_create_donation') }}"><span aria-hidden="true">＋</span> Create Donation <span aria-hidden="true">›</span></a></div>
+      </section>
+
+      <section class="panel compact-panel" aria-labelledby="pending-title">
+        <div class="panel-heading"><h2 id="pending-title"><span class="panel-mark mark-amber" aria-hidden="true">▤</span> Pending Requests</h2><a class="view-link" href="{{ donor_url('donor_requests', status='pending') }}">View All <span aria-hidden="true">→</span></a></div>
+        {% if pending_requests %}
+          <div class="request-list">
+          {% for item in pending_requests %}
+            <article class="request-row"><img src="{{ url_for('static', filename='images/' ~ item.image) }}" alt="{{ item.image_alt }}"><div class="request-copy"><strong>{{ item.acceptor_name }}</strong><span>Requested {{ item.quantity }} {{ item.unit }} of {{ item.food_name }}</span><small>{{ item.elapsed }}</small></div><span class="status-pill status-pending">Pending</span></article>
+          {% endfor %}
+          </div>
+        {% else %}
+          <div class="compact-empty"><span class="compact-empty-art" aria-hidden="true"><svg viewBox="0 0 42 42"><path d="M10 5h15l7 7v25H10zM25 5v8h7M15 21h12m-12 6h12"/><circle cx="31" cy="31" r="8"/><path d="M31 27v5l3 2"/></svg></span><div><strong>No pending requests yet</strong><p>New requests for your food donations will appear here.</p></div></div>
+        {% endif %}
+      </section>
+
+      <section class="panel compact-panel donor-dashboard-collections" aria-labelledby="collections-title">
+        <div class="panel-heading"><h2 id="collections-title">Pickup coordination</h2><a class="view-link" href="{{ donor_url('donor_collections') }}">View All <span aria-hidden="true">→</span></a></div>
+        {% if collections %}<div class="dashboard-collection-list">{% for item in collections %}<article><div><span class="status-pill status-{{ 'active' if item.status_key == 'scheduled' else 'completed' if item.status_key == 'collected' else 'cancelled' if item.status_key == 'cancelled' else 'expiring' }}">{{ item.status }}</span><strong>{{ item.food_name }}</strong><small>{{ item.acceptor_name }} · {{ item.quantity }} {{ item.unit }}</small>{% if item.scheduled_at %}<small>Pickup {{ item.scheduled_at.strftime('%d %b, %I:%M %p') }}</small>{% else %}<small>Pickup time not set</small>{% endif %}{% if item.acceptor_phone %}<a href="tel:{{ item.acceptor_phone }}">Call {{ item.acceptor_phone }}</a>{% endif %}</div></article>{% endfor %}</div>{% else %}<div class="compact-empty"><div><strong>No approved pickups yet</strong><p>After you approve a request, the acceptor and pickup details appear here.</p></div></div>{% endif %}
+      </section>
+
+      <section class="panel nearby-panel" aria-labelledby="nearby-title">
+        <div class="panel-heading"><h2 id="nearby-title">Nearby Acceptors</h2><a class="view-link" href="{{ donor_url('donor_nearby_acceptors') }}">View All <span aria-hidden="true">→</span></a></div>
+        <a class="nearby-summary" href="{{ donor_url('donor_nearby_acceptors') }}"><span class="nearby-count">{{ nearby_need_count if nearby_need_count is not none else '—' }}</span><span class="nearby-copy"><strong>Open food needs nearby</strong><small>{% if has_nearby_location %}Within 25 km of your active donation{% else %}Create a located donation to see local needs{% endif %}</small></span><span class="row-chevron" aria-hidden="true">›</span></a>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

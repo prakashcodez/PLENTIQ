@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f1">
+  <title>{{ page_title|default('Acceptor workspace') }} · Plentiq</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/donor.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/acceptor.css') }}">
+</head>
+<body class="donor-page acceptor-page">
+  <div class="donor-layout">
+    <aside class="donor-sidebar" aria-label="Acceptor workspace sidebar">
+      <a class="donor-brand" href="{{ url_for('acceptor_dashboard') }}" aria-label="Plentiq acceptor dashboard">
+        <img src="{{ url_for('static', filename='images/plentiq-logo.png') }}" alt="Plentiq">
+        <span>Food Today<br>Brighter Tomorrow</span>
+      </a>
+      <nav class="donor-nav" aria-label="Acceptor navigation">
+        <a class="{{ 'is-active' if active_page == 'dashboard' else '' }}" href="{{ url_for('acceptor_dashboard') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>Dashboard</span></a>
+        <a class="{{ 'is-active' if active_page == 'food' else '' }}" href="{{ url_for('acceptor_food') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8m-8 4h5"/><circle cx="18" cy="16" r="3"/></svg><span>Find Food</span></a>
+        <a class="{{ 'is-active' if active_page == 'needs' else '' }}" href="{{ url_for('acceptor_needs') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v17H5zM8 8h8m-8 4h8m-8 4h5"/><path d="M9 2v4m6-4v4"/></svg><span>My Needs</span></a>
+        <a class="{{ 'is-active' if active_page == 'requests' else '' }}" href="{{ url_for('acceptor_requests') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 13h7m-7 4h7"/></svg><span>My Requests</span></a>
+        <a class="{{ 'is-active' if active_page == 'collections' else '' }}" href="{{ url_for('acceptor_collections') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v11H3zM15 11h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg><span>Collections</span></a>
+        <a class="{{ 'is-active' if active_page == 'profile' else '' }}" href="{{ url_for('acceptor_profile') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg><span>Profile &amp; Location</span></a>
+        <a class="{{ 'is-active' if active_page == 'notifications' else '' }}" href="{{ url_for('acceptor_notifications') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/></svg><span>Notifications</span></a>
+        <a class="{{ 'is-active' if active_page == 'reports' else '' }}" href="{{ url_for('acceptor_reports') }}" {% if active_page == 'reports' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h5"/></svg><span>My Reports</span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <img class="sidebar-art" src="{{ url_for('static', filename='images/bbd33534-13a7-4adc-9679-316b8ae6e779.png') }}" alt="Good Food, Brighter Communities">
+        <a class="logout-link" href="{{ url_for('logout') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3m9-9h8v18h-8"/></svg><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <div class="donor-main">
+      <header class="donor-topbar">
+        <a class="mobile-brand" href="{{ url_for('acceptor_dashboard') }}"><img src="{{ url_for('static', filename='images/plentiq-logo.png') }}" alt="Plentiq"></a>
+        <form class="global-search" action="{{ url_for('acceptor_food') }}" method="get" role="search">
+          <label class="sr-only" for="workspace-search">Search nearby food</label>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+          <input id="workspace-search" type="search" name="q" value="{{ query|default('') }}" placeholder="Search nearby food...">
+          <button type="submit" aria-label="Search">Search</button>
+        </form>
+        <div class="topbar-account">
+          <a class="notification-link" href="{{ url_for('acceptor_notifications') }}" data-unread-count="{{ unread_notification_count }}" aria-label="Open notifications{% if unread_notification_count %}, {{ unread_notification_count }} unread{% endif %}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/></svg>{% if unread_notification_count %}<span class="notification-badge" aria-hidden="true">{{ unread_notification_count if unread_notification_count < 100 else '99+' }}</span>{% endif %}</a>
+          <a class="account-link" href="{{ url_for('acceptor_profile') }}"><span class="avatar" aria-hidden="true">{{ session.get('full_name', 'A')[:1]|upper }}</span><span>{{ session.get('full_name', 'Acceptor') }}</span><span class="account-chevron" aria-hidden="true">⌄</span></a>
+        </div>
+      </header>
+      <main class="donor-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="workspace-flashes" role="status">{% for category, message in messages %}<p class="workspace-flash workspace-flash-{{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}{% endwith %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/location-picker.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/push-notifications.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/acceptor.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{% extends 'acceptor/base.html' %}
+{% set page_title = 'Find Food Nearby' %}
+{% block content %}
+  <header class="page-heading acceptor-page-heading"><div><p class="step-kicker">Acceptor workspace</p><h1>Find Food Nearby</h1><p>Browse active donations within 25 km of your saved location.</p></div><a class="button button-primary" href="{{ url_for('acceptor_need_new') }}">＋ Post a food need</a></header>
+  {% if profile.latitude is none or profile.longitude is none %}<div class="acceptor-location-callout"><strong>Your location is needed for 25 km matching.</strong><span>Save current location in your profile, then return here.</span><a class="button button-primary" href="{{ url_for('acceptor_profile') }}">Set my location</a></div>
+  {% else %}
+    <section class="acceptor-filter-panel panel" aria-label="Filter nearby donations">
+      <form class="acceptor-filter-form" method="get" action="{{ url_for('acceptor_food') }}">
+        <label><span class="sr-only">Search food</span><input type="search" name="q" value="{{ query }}" placeholder="Search food or category"></label>
+        <label><span class="sr-only">Category</span><select name="category"><option value="all">All categories</option>{% for code, label in categories %}<option value="{{ code }}" {% if category_filter == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label><span class="sr-only">Dietary preference</span><select name="dietary"><option value="all">All dietary types</option>{% for code, label in dietary_options %}<option value="{{ code }}" {% if dietary_filter == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <button class="button button-primary" type="submit">Apply filters</button><a class="filter-reset" href="{{ url_for('acceptor_food') }}">Clear</a>
+      </form>
+      <p class="acceptor-filter-note">Showing real active listings within 25 km. Exact pickup addresses and donor phone numbers stay private until the donor approves your request.</p>
+    </section>
+    <section class="acceptor-food-grid" aria-label="Nearby donation listings">
+      {% for food in foods %}
+      <article class="acceptor-food-card panel">
+        <img class="acceptor-food-image" src="{{ url_for('static', filename=food.photo) }}" alt="{{ food.food_name }}">
+        <div class="acceptor-food-body"><div class="acceptor-food-heading"><div>{% if food.is_expiring_soon %}<span class="urgent-rescue-badge" role="status">Urgent Rescue · Expiring Soon</span>{% endif %}<h2>{{ food.food_name }}</h2><p>{{ food.category }} <span>·</span> {{ food.diet }}</p></div><span class="distance-pill">{{ food.distance_km }} km</span></div>
+          <p class="acceptor-food-description">{{ food.description or 'Food donation available for local collection.' }}</p>
+          <div class="acceptor-food-meta"><span>{{ food.area }}, {{ food.city }}</span><span>Available: <strong>{{ food.available_quantity }} {{ food.unit }}</strong></span><span>Pickup by {{ food.pickup_ends_at.strftime('%d %b, %I:%M %p') }}</span></div>
+          {% if food.my_request_status %}<p class="acceptor-existing-request">You already have a {{ food.my_request_status }} request for this item.</p>
+          {% else %}<form class="acceptor-request-form" method="post" action="{{ url_for('acceptor_request_food', item_id=food.item_id) }}"><label>Quantity to request<input type="number" name="quantity" min="0.01" max="{{ food.available_quantity }}" step="0.01" required></label><span>{{ food.unit }}</span><button class="button button-primary" type="submit">Request Food</button></form>{% endif %}
+        </div>
+      </article>
+      {% else %}<div class="records-empty acceptor-no-food"><div><h2>No food listings match your search</h2><p>Try another category or check again later. Only located, active donations inside 25 km are shown.</p><a class="button button-primary" href="{{ url_for('acceptor_food') }}">Clear filters</a></div></div>{% endfor %}
+    </section>
+  {% endif %}
+{% endblock %}

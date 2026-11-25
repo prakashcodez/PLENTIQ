@@ -1,0 +1,80 @@
+{% extends 'acceptor/base.html' %}
+{% set page_title = 'My Collections' if collections_only else 'My Requests' %}
+{% block content %}
+  <header class="page-heading acceptor-page-heading">
+    <div>
+      <p class="step-kicker">Acceptor workspace</p>
+      <h1>{{ 'My Collections' if collections_only else 'My Requests' }}</h1>
+      <p>{{ 'See pickup arrangements and collection progress for food approved by donors.' if collections_only else 'Track donor decisions for the food you requested.' }}</p>
+    </div>
+    {% if not collections_only %}<a class="button button-primary" href="{{ url_for('acceptor_food') }}">Find Food</a>{% endif %}
+  </header>
+  {% if collections_only and not collection_confirmation_ready %}
+    <div class="collection-window-ended" role="status">Two-party collection confirmation is not active. Apply <code>database_migrations/010_two_party_collection_confirmation.sql</code> in MySQL Workbench, then restart the app.</div>
+  {% endif %}
+  <section class="acceptor-request-list">
+    {% for item in requests %}
+      {% if not collections_only or item.status == 'Approved' %}
+        {% set waiting_for_acceptor = item.donor_confirmed_at and not item.acceptor_confirmed_at %}
+        {% set waiting_for_donor = item.collection_status == 'scheduled' and not item.donor_confirmed_at %}
+        {% set card_status = 'Collected' if item.collection_status == 'collected' else 'Awaiting your confirmation' if waiting_for_acceptor else 'Awaiting donor PIN check' if waiting_for_donor else 'Window ended' if item.collection_overdue else {'scheduled':'Yet to collect','missed':'Missed pickup','cancelled':'Cancelled'}.get(item.collection_status, item.status) if collections_only else item.status %}
+        {% set card_status_class = 'active' if waiting_for_acceptor else 'expiring' if collections_only and item.collection_overdue else item.collection_status if collections_only and item.collection_status else item.status_key %}
+        <article class="acceptor-request-card panel">
+          <div class="acceptor-request-head">
+            <div>
+              <span class="status-pill status-{{ card_status_class }}">{{ card_status }}</span>
+              <h2>{{ item.food_name }}</h2>
+              <p>{{ item.category }} · {{ item.quantity }} {{ item.unit }}</p>
+            </div>
+            <small>Requested {{ item.requested_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+          </div>
+          <div class="acceptor-need-facts"><span>{{ item.area }}, {{ item.city }}</span><span>Pickup window ends {{ item.pickup_ends_at.strftime('%d %b %Y, %I:%M %p') if item.pickup_ends_at else 'Not set' }}</span></div>
+          {% if item.collection_status %}
+            <div class="acceptor-pickup-details">
+              <h3>Pickup details</h3>
+              <p><strong>Donor:</strong> {{ item.donor_label }}</p>
+              <p><strong>Address:</strong> {{ item.pickup_address or 'Not provided' }}</p>
+              {% if item.contact_phone %}<p><strong>Donor phone:</strong> <a href="tel:{{ item.contact_phone }}">{{ item.contact_phone }}</a></p>{% endif %}
+              {% if item.scheduled_pickup_at %}<p><strong>Agreed pickup:</strong> {{ item.scheduled_pickup_at.strftime('%d %b %Y, %I:%M %p') }}</p>{% else %}<p>The donor has not set an agreed pickup time yet.</p>{% endif %}
+              {% if item.collected_at %}<p><strong>Collection completed:</strong> {{ item.collected_at.strftime('%d %b %Y, %I:%M %p') }}</p>{% endif %}
+              <p><strong>Collection status:</strong> {{ card_status }}</p>
+            </div>
+            {% if collections_only and item.collection_status == 'scheduled' %}
+              <div class="pickup-pin-card" role="note">
+                <div><strong>Your pickup verification PIN</strong><p>Show this code to the donor at handover. Once the donor verifies it, confirm receipt below to complete the collection.</p></div>
+                {% if item.pickup_pin %}<code aria-label="Four digit pickup PIN">{{ item.pickup_pin }}</code>
+                {% elif not pickup_pin_ready %}<span class="pickup-pin-unavailable">PIN setup is pending. Apply migration 009 and restart the app.</span>
+                {% else %}<span class="pickup-pin-unavailable">PIN unavailable; ask the donor to contact the project admin.</span>{% endif %}
+              </div>
+              {% if item.can_confirm_collection %}
+                <form class="acceptor-confirm-collection" method="post" action="{{ url_for('acceptor_confirm_collection', collection_id=item.collection_id) }}">
+                  <p>The donor verified your PIN. Confirm that you received the food to complete the handover.</p>
+                  <button class="button button-primary" type="submit">Confirm I received the food</button>
+                </form>
+              {% elif waiting_for_acceptor %}
+                <p class="collection-window-ended">The donor verified your PIN. Confirm receipt here after the pickup window starts.</p>
+              {% endif %}
+            {% elif collections_only and item.collection_status == 'collected' %}
+              <p class="collection-scheduled"><strong>Collection confirmed by both parties.</strong></p>
+            {% endif %}
+          {% elif item.status == 'Declined' and item.rejection_reason %}
+            <p class="acceptor-rejection-reason">Donor note: {{ item.rejection_reason }}</p>
+          {% elif item.status in ['Pending', 'Expired'] %}
+            <form method="post" action="{{ url_for('acceptor_request_cancel', request_id=item.id) }}"><button class="button button-outline" type="submit">Cancel request</button></form>
+          {% endif %}
+          <details class="report-disclosure">
+            <summary>Report a problem</summary>
+            <form class="report-form" method="post" action="{{ url_for('acceptor_report_request', request_id=item.id) }}">
+              <label>Reason<select name="reason_code" required>{% for reason in report_reasons %}<option value="{{ reason.code }}">{{ reason.label }}</option>{% endfor %}</select></label>
+              <label>Details (optional)<textarea name="details" rows="2" maxlength="1000" placeholder="Add context for the admin team"></textarea></label>
+              <input type="hidden" name="return_to" value="{{ 'collections' if collections_only else 'requests' }}">
+              <button class="button button-outline" type="submit" {% if not report_reasons %}disabled{% endif %}>Send report</button>
+            </form>
+          </details>
+        </article>
+      {% endif %}
+    {% else %}
+      <div class="records-empty"><div><h2>{{ 'No approved collections yet' if collections_only else 'No food requests yet' }}</h2><p>{{ 'When a donor approves your request, its pickup and handover status will appear here.' if collections_only else 'Browse nearby donations to request food, or post a broad food need for nearby donors.' }}</p><a class="button button-primary" href="{{ url_for('acceptor_food') }}">Find Food <span aria-hidden="true">→</span></a></div></div>
+    {% endfor %}
+  </section>
+{% endblock %}

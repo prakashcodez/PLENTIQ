@@ -1,0 +1,34 @@
+{% extends 'donor/base.html' %}
+{% set page_title = donation.food_name %}
+{% block content %}
+  <header class="page-heading">
+    <div><p class="step-kicker">Donor workspace</p><h1>Donation details</h1><p>Review the food, pickup, and contact information saved with this listing.</p></div>
+    <a class="secondary-button" href="{{ donor_url('donor_donations') }}">&larr; My Donations</a>
+  </header>
+  <section class="panel content-panel donation-detail">
+    <img src="{{ url_for('static', filename=donation.uploaded_image or 'images/food-fallback.svg') }}" data-food-image data-fallback="{{ url_for('static', filename='images/food-fallback.svg') }}" alt="{{ donation.image_alt or donation.food_name }}">
+    <div class="donation-detail-copy">
+      {% if demo_mode %}<span class="demo-label">Sample data</span>{% endif %}
+      <h1>{{ donation.food_name }}</h1>
+      <p>{{ donation.description or 'No description provided.' }}</p>
+      <span class="status-pill status-{{ donation.status_key }}">{{ donation.status }}</span>
+      <dl class="detail-facts">
+        <div><dt>Category</dt><dd>{{ donation.category }}</dd></div>
+        <div><dt>Food type</dt><dd>{{ donation.diet or 'Not specified' }}</dd></div>
+        <div><dt>Total quantity</dt><dd>{{ donation.quantity }} {{ donation.unit }}</dd></div>
+        <div><dt>Still available</dt><dd>{{ donation.available_quantity }} {{ donation.unit }}</dd></div>
+        {% if donation.serving_size %}<div><dt>Approx. serving size</dt><dd>{{ donation.serving_size }} {{ donation.serving_unit or '' }}</dd></div>{% endif %}
+        <div><dt>Prepared on</dt><dd>{{ donation.prepared_at.strftime('%d %b %Y, %I:%M %p') if donation.prepared_at else 'Not provided' }}</dd></div>
+        <div><dt>Approximate expiry</dt><dd>{{ donation.approximate_expiry_at.strftime('%d %b %Y, %I:%M %p') if donation.approximate_expiry_at else 'Not provided' }}</dd></div>
+        <div><dt>Pickup window</dt><dd>{{ donation.pickup_starts_at.strftime('%d %b %Y, %I:%M %p') if donation.pickup_starts_at else 'Not set' }} &ndash; {{ donation.pickup_ends_at.strftime('%d %b %Y, %I:%M %p') if donation.pickup_ends_at else 'Not set' }}</dd></div>
+        <div><dt>Pickup location</dt><dd>{{ donation.pickup_address }}{% if donation.landmark %}, near {{ donation.landmark }}{% endif %}, {{ donation.area }}, {{ donation.city }}</dd></div>
+        {% if donation.contact_name %}<div><dt>Contact name</dt><dd>{{ donation.contact_name }}</dd></div>{% endif %}
+        {% if donation.contact_phone %}<div><dt>Contact phone</dt><dd><a href="tel:{{ donation.contact_phone }}">{{ donation.contact_phone }}</a></dd></div>{% endif %}
+        {% if donation.contact_email %}<div><dt>Contact email</dt><dd><a href="mailto:{{ donation.contact_email }}">{{ donation.contact_email }}</a></dd></div>{% endif %}
+        <div><dt>Requests</dt><dd>{{ donation.request_count }}</dd></div>
+        <div><dt>Created</dt><dd>{{ donation.created_at.strftime('%d %b %Y, %I:%M %p') if donation.created_at else 'Not recorded' }}</dd></div>
+      </dl>
+      {% if donation.latitude is not none and donation.longitude is not none %}<a class="button button-outline" href="https://www.google.com/maps?q={{ donation.latitude }},{{ donation.longitude }}" target="_blank" rel="noopener">Open pickup location in Maps</a>{% endif %}
+    </div>
+  </section>
+{% endblock %}

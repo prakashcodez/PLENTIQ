@@ -1,8 +1,8 @@
+# Keep the old project and its local-only configuration out of new commits.
+/v1/
 /.env
-/.env.*
-!/.env.example
 /.venv/
-/.pytest_cache/
-/__pycache__/
+/instance/
+__pycache__/
 *.py[cod]
-/plentiq_db_backup_*.sql
+/static/uploads/

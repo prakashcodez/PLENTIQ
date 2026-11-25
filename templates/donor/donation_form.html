@@ -1,0 +1,306 @@
+{% extends 'donor/base.html' %}
+{% set page_title = 'Create Donation' %}
+{% block content %}
+<section class="create-donation-page" data-create-wizard data-current-step="{{ current_step }}">
+  <header class="create-donation-hero">
+    <div class="create-hero-copy">
+      <p class="create-hero-eyebrow">Donor workspace</p>
+      <h1>Create a Food Donation</h1>
+      <p>Share your surplus food and help communities in need. Add one or more food items to your donation.</p>
+    </div>
+    <img src="{{ url_for('static', filename='images/food-donation.png') }}" alt="Fresh donated food ready to be shared">
+  </header>
+
+  <nav class="donation-progress" aria-label="Donation form steps">
+    <ol>
+      {% set step_labels = [('food', 'Food Items', 'Add one or more food items'), ('pickup', 'Pickup Details', 'Location and timing'), ('contact', 'Contact Info', 'Your details'), ('review', 'Review & Submit', 'Confirm and share')] %}
+      {% for key, label, description in step_labels %}
+      <li data-progress-step="{{ key }}" class="{{ 'is-current' if current_step == key else '' }} {{ 'is-complete' if loop.index0 < ['food', 'pickup', 'contact', 'review'].index(current_step) else '' }}">
+        <button type="button" data-go-step="{{ key }}" {% if key == current_step %}aria-current="step"{% endif %} {% if loop.index0 > ['food', 'pickup', 'contact', 'review'].index(current_step) %}disabled{% endif %}>
+          <span class="progress-number">{{ '✓' if loop.index0 < ['food', 'pickup', 'contact', 'review'].index(current_step) else loop.index }}</span>
+          <span class="progress-label"><strong>{{ label }}</strong><small>{{ description }}</small></span>
+        </button>
+      </li>
+      {% endfor %}
+    </ol>
+  </nav>
+
+  <div class="donation-wizard-columns">
+    <form class="donation-wizard-form" action="{{ donor_url('donor_create_donation') }}" method="post" enctype="multipart/form-data" data-donation-form data-profile-name="{{ profile_contact.name }}" data-profile-email="{{ profile_contact.email }}" data-profile-phone="{{ profile_contact.phone }}" novalidate>
+      <div class="wizard-feedback" data-wizard-feedback aria-live="polite">
+        {% if notice %}<p class="form-alert" role="status">{{ notice }}</p>{% endif %}
+        {% if errors %}
+        <div class="form-errors" role="alert" data-server-errors>
+          <strong>Please review these details:</strong>
+          <ul>{% for error in errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+      </div>
+
+      <section class="wizard-step panel" data-step-panel="food" {% if current_step != 'food' %}hidden{% endif %} aria-labelledby="food-step-title">
+        <header class="wizard-section-heading">
+          <div><p class="step-kicker">Step 1 of 4</p><h2 id="food-step-title">Food Items</h2><p>Add all the food items you want to donate. Each item keeps its own details and quantity.</p></div>
+          <button class="button button-outline" type="button" data-add-item>Add Another Food Item</button>
+        </header>
+
+        <div class="food-item-list" data-item-list>
+          {% for item in items %}
+          {% set item_index = loop.index0 %}
+          <article class="food-item-card" data-food-item data-index="{{ item_index }}">
+            <header class="food-item-heading">
+              <button class="item-collapse" type="button" data-toggle-item aria-expanded="true" aria-controls="food-item-body-{{ item_index }}">
+                <span class="item-index">{{ loop.index }}</span><span>Food Item {{ loop.index }}</span>
+              </button>
+              <button class="item-remove" type="button" data-remove-item {% if loop.length == 1 %}disabled{% endif %}>Remove item</button>
+            </header>
+            <div class="food-item-body" id="food-item-body-{{ item_index }}" data-item-body>
+              <div class="food-item-photo">
+                <img src="{{ url_for('static', filename='images/food-fallback.svg') }}" data-food-preview data-default-src="{{ url_for('static', filename='images/food-fallback.svg') }}" alt="Food item photo preview">
+                <label class="photo-select" for="food-photo-{{ item_index }}">Choose photo</label>
+                <input class="photo-input" id="food-photo-{{ item_index }}" name="items[{{ item_index }}][food_photo]" type="file" accept="image/png,image/jpeg,image/webp" data-image-input>
+                <p>Optional photo. It will be saved on this app server with the donation.</p>
+              </div>
+              <div class="food-item-fields">
+                <div class="item-field-grid">
+                  <div class="field" data-field-wrap>
+                    <label for="food-name-{{ item_index }}">Food name <span aria-hidden="true">*</span></label>
+                    <input id="food-name-{{ item_index }}" name="items[{{ item_index }}][food_name]" data-field="items.{{ item_index }}.food_name" type="text" maxlength="120" value="{{ item.food_name }}" placeholder="e.g. Vegetable biryani" required aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.food_name') else 'false' }}">
+                    <span class="field-error" data-error-for="items.{{ item_index }}.food_name">{{ field_errors.get('items.' ~ item_index ~ '.food_name', '') }}</span>
+                  </div>
+                  <div class="field" data-field-wrap>
+                    <label for="category-{{ item_index }}">Category <span aria-hidden="true">*</span></label>
+                    <select id="category-{{ item_index }}" name="items[{{ item_index }}][category]" data-field="items.{{ item_index }}.category" required aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.category') else 'false' }}">
+                      <option value="">Choose a category</option>
+                      {% for option in categories %}<option value="{{ option }}" {% if item.category == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+                    </select>
+                    <span class="field-error" data-error-for="items.{{ item_index }}.category">{{ field_errors.get('items.' ~ item_index ~ '.category', '') }}</span>
+                  </div>
+                  <fieldset class="dietary-field field-full" data-field-wrap>
+                    <legend>Dietary type <span class="optional">(optional)</span></legend>
+                    <div class="dietary-options">
+                      {% for option in dietary_types %}
+                      <label class="choice-chip"><input type="radio" name="items[{{ item_index }}][dietary_type]" data-field="items.{{ item_index }}.dietary_type" value="{{ option }}" {% if item.dietary_type == option %}checked{% endif %}><span>{{ option }}</span></label>
+                      {% endfor %}
+                    </div>
+                    <span class="field-error" data-error-for="items.{{ item_index }}.dietary_type">{{ field_errors.get('items.' ~ item_index ~ '.dietary_type', '') }}</span>
+                  </fieldset>
+                  <div class="field field-full" data-field-wrap>
+                    <label for="description-{{ item_index }}">Short description <span aria-hidden="true">*</span></label>
+                    <textarea id="description-{{ item_index }}" name="items[{{ item_index }}][description]" data-field="items.{{ item_index }}.description" maxlength="300" rows="2" placeholder="Describe the food and useful handling details." required aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.description') else 'false' }}">{{ item.description }}</textarea>
+                    <span class="field-error" data-error-for="items.{{ item_index }}.description">{{ field_errors.get('items.' ~ item_index ~ '.description', '') }}</span>
+                  </div>
+                  <div class="field" data-field-wrap>
+                    <label for="quantity-{{ item_index }}">Quantity <span aria-hidden="true">*</span></label>
+                    <input id="quantity-{{ item_index }}" name="items[{{ item_index }}][quantity]" data-field="items.{{ item_index }}.quantity" type="number" min="0.01" step="any" value="{{ item.quantity }}" placeholder="e.g. 20" required aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.quantity') else 'false' }}">
+                    <span class="field-error" data-error-for="items.{{ item_index }}.quantity">{{ field_errors.get('items.' ~ item_index ~ '.quantity', '') }}</span>
+                  </div>
+                  <div class="field" data-field-wrap>
+                    <label for="unit-{{ item_index }}">Unit <span aria-hidden="true">*</span></label>
+                    <select id="unit-{{ item_index }}" name="items[{{ item_index }}][unit]" data-field="items.{{ item_index }}.unit" required aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.unit') else 'false' }}">
+                      <option value="">Choose a unit</option>
+                      {% for option in units %}<option value="{{ option }}" {% if item.unit == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+                    </select>
+                    <span class="field-error" data-error-for="items.{{ item_index }}.unit">{{ field_errors.get('items.' ~ item_index ~ '.unit', '') }}</span>
+                  </div>
+                  <div class="field" data-field-wrap>
+                    <label for="serving-size-{{ item_index }}">Approx. serving size <span class="optional">(optional)</span></label>
+                    <input id="serving-size-{{ item_index }}" name="items[{{ item_index }}][serving_size]" data-field="items.{{ item_index }}.serving_size" type="number" min="0.01" step="any" value="{{ item.serving_size }}" placeholder="e.g. 1" aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.serving_size') else 'false' }}">
+                    <span class="field-error" data-error-for="items.{{ item_index }}.serving_size">{{ field_errors.get('items.' ~ item_index ~ '.serving_size', '') }}</span>
+                  </div>
+                  <div class="field" data-field-wrap>
+                    <label for="serving-unit-{{ item_index }}">Serving unit <span class="optional">(optional)</span></label>
+                    <select id="serving-unit-{{ item_index }}" name="items[{{ item_index }}][serving_unit]" data-field="items.{{ item_index }}.serving_unit" aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.serving_unit') else 'false' }}">
+                      <option value="">Choose if known</option>
+                      {% for option in ['Person per packet', 'Per person', 'Piece', 'Grams', 'Millilitres'] %}<option value="{{ option }}" {% if item.serving_unit == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+                    </select>
+                    <span class="field-error" data-error-for="items.{{ item_index }}.serving_unit">{{ field_errors.get('items.' ~ item_index ~ '.serving_unit', '') }}</span>
+                  </div>
+                  <fieldset class="field field-full item-prepared-field" data-field-wrap>
+                    <legend>Prepared on <span class="optional" data-prepared-optional {% if item.category != 'Fruits and Vegetables' %}hidden{% endif %}>(optional for fruits &amp; vegetables)</span><span data-prepared-required {% if item.category == 'Fruits and Vegetables' %}hidden{% endif %} aria-hidden="true">*</span></legend>
+                    <div class="date-time-inputs">
+                      <label class="date-time-part" for="item-prepared-date-{{ item_index }}"><span>Date</span><input id="item-prepared-date-{{ item_index }}" data-item-prepared-part="date" data-field="items.{{ item_index }}.prepared_at" type="date" aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.prepared_at') else 'false' }}"></label>
+                      <label class="date-time-part" for="item-prepared-time-{{ item_index }}"><span>Time</span><input id="item-prepared-time-{{ item_index }}" data-item-prepared-part="time" data-field="items.{{ item_index }}.prepared_at" type="time" step="60" aria-invalid="{{ 'true' if field_errors.get('items.' ~ item_index ~ '.prepared_at') else 'false' }}"></label>
+                    </div>
+                    <input id="item-prepared-{{ item_index }}" name="items[{{ item_index }}][prepared_at]" data-field="items.{{ item_index }}.prepared_at" type="hidden" value="{{ item.prepared_at }}">
+                    <span class="field-help" data-prepared-help>{% if item.category == 'Fruits and Vegetables' %}Optional for fruits and vegetables when the harvest or packing time is unknown.{% else %}When this food item was prepared or packed. Any minute is accepted.{% endif %}</span>
+                    <span class="field-error" data-error-for="items.{{ item_index }}.prepared_at">{{ field_errors.get('items.' ~ item_index ~ '.prepared_at', '') }}</span>
+                  </fieldset>
+                  <fieldset class="field field-full item-deadline-field" data-field-wrap>
+                    <legend>Approximate expiry <span aria-hidden="true">*</span></legend>
+                    <div class="date-time-inputs">
+                      <label class="date-time-part" for="item-expiry-date-{{ item_index }}"><span>Date</span><input id="item-expiry-date-{{ item_index }}" data-item-deadline-part="date" data-field="items.{{ item_index }}.item_deadline" type="date" aria-invalid="false"></label>
+                      <label class="date-time-part" for="item-expiry-time-{{ item_index }}"><span>Time</span><input id="item-expiry-time-{{ item_index }}" data-item-deadline-part="time" data-field="items.{{ item_index }}.item_deadline" type="time" step="60" aria-invalid="false"></label>
+                    </div>
+                    <input id="item-deadline-{{ item_index }}" name="items[{{ item_index }}][item_deadline]" data-field="items.{{ item_index }}.item_deadline" type="hidden" value="{{ item.item_deadline }}">
+                    <span class="field-help" data-expiry-help>Required for each item. Fruits &amp; vegetables: up to 7 days from preparation; other categories: up to 30 days. If produce preparation is unknown, the limit starts today. The earliest expiry sets the pickup cutoff one hour earlier. Use the food label or storage guidance; this limit does not certify food safety.</span>
+                    <span class="field-error" data-error-for="items.{{ item_index }}.item_deadline">{{ field_errors.get('items.' ~ item_index ~ '.item_deadline', '') }}</span>
+                  </fieldset>
+                </div>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        <p class="info-strip" role="note">Enter an approximate expiry for every item. Fruit and vegetable listings are limited to 7 days; other categories are limited to 30 days. Pickup closes one hour before the earliest expiry. These are listing limits, not food safety guarantees.</p>
+        <div class="wizard-actions">
+          <a class="button button-muted" href="{{ donor_url('donor_donations') }}">Back to My Donations</a>
+          <button class="button button-primary" type="button" data-next-step="pickup">Next: Pickup Details</button>
+        </div>
+      </section>
+
+      <section class="wizard-step panel" data-step-panel="pickup" {% if current_step != 'pickup' %}hidden{% endif %} aria-labelledby="pickup-step-title">
+        <header class="wizard-section-heading">
+          <div><p class="step-kicker">Step 2 of 4</p><h2 id="pickup-step-title">Pickup Details</h2><p>Tell us where and when the food can be collected.</p></div>
+        </header>
+        <div class="pickup-location-block" data-location-picker>
+          <div class="subsection-heading"><span class="subsection-number">1</span><div><h3>Pickup Location</h3><p>Enter the address and check the map preview on the right.</p></div></div>
+          <div class="pickup-location-layout">
+            <div class="pickup-location-fields">
+              <div class="pickup-grid">
+                <div class="field" data-field-wrap><label for="pickup-city">City <span aria-hidden="true">*</span></label><input id="pickup-city" name="pickup[city]" data-field="pickup.city" data-location-search type="text" maxlength="100" value="{{ pickup.city }}" placeholder="e.g. Hyderabad" required aria-invalid="{{ 'true' if field_errors.get('pickup.city') else 'false' }}"><span class="field-error" data-error-for="pickup.city">{{ field_errors.get('pickup.city', '') }}</span></div>
+                <div class="field" data-field-wrap><label for="pickup-area">Area <span aria-hidden="true">*</span></label><input id="pickup-area" name="pickup[area]" data-field="pickup.area" data-location-search type="text" maxlength="120" value="{{ pickup.area }}" placeholder="e.g. Hitech City" required aria-invalid="{{ 'true' if field_errors.get('pickup.area') else 'false' }}"><span class="field-error" data-error-for="pickup.area">{{ field_errors.get('pickup.area', '') }}</span></div>
+                <div class="field" data-field-wrap><label for="pickup-landmark">Landmark <span class="optional">(optional)</span></label><input id="pickup-landmark" name="pickup[landmark]" data-field="pickup.landmark" data-location-search type="text" maxlength="160" value="{{ pickup.landmark }}" placeholder="Nearby landmark" aria-invalid="{{ 'true' if field_errors.get('pickup.landmark') else 'false' }}"><span class="field-error" data-error-for="pickup.landmark">{{ field_errors.get('pickup.landmark', '') }}</span></div>
+                <div class="field field-full" data-field-wrap><label for="pickup-address">Full pickup address <span aria-hidden="true">*</span></label><textarea id="pickup-address" name="pickup[pickup_address]" data-field="pickup.pickup_address" data-location-search maxlength="300" rows="3" placeholder="Street, building, and pickup instructions" required aria-invalid="{{ 'true' if field_errors.get('pickup.pickup_address') else 'false' }}">{{ pickup.pickup_address }}</textarea><span class="field-error" data-error-for="pickup.pickup_address">{{ field_errors.get('pickup.pickup_address', '') }}</span></div>
+              </div>
+              <div class="location-tools">
+                <div class="location-actions">
+                  <button class="button button-outline" type="button" data-current-location><span class="material-icons-round" aria-hidden="true">my_location</span>Use my current location</button>
+                  <p class="location-status" data-location-status role="status" aria-live="polite">Enter the pickup address, or use your current location.</p>
+                </div>
+                <details class="coordinate-details">
+                  <summary>Enter coordinates manually <span class="optional">(optional)</span></summary>
+                  <div class="coordinate-grid">
+                    <div class="field" data-field-wrap><label for="pickup-latitude">Latitude</label><input id="pickup-latitude" name="pickup[latitude]" data-location-latitude data-field="pickup.latitude" type="number" min="-90" max="90" step="any" value="{{ pickup.latitude }}" placeholder="-90 to 90" aria-invalid="{{ 'true' if field_errors.get('pickup.latitude') else 'false' }}"><span class="field-error" data-error-for="pickup.latitude">{{ field_errors.get('pickup.latitude', '') }}</span></div>
+                    <div class="field" data-field-wrap><label for="pickup-longitude">Longitude</label><input id="pickup-longitude" name="pickup[longitude]" data-location-longitude data-field="pickup.longitude" type="number" min="-180" max="180" step="any" value="{{ pickup.longitude }}" placeholder="-180 to 180" aria-invalid="false"><span class="field-error" data-error-for="pickup.longitude"></span></div>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <aside class="pickup-map-panel" aria-label="Pickup map preview">
+              <div class="map-preview">
+                <iframe data-map-frame title="Map preview of the pickup location" loading="lazy" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
+                <div class="map-preview-empty" data-map-empty><span class="material-icons-round" aria-hidden="true">map</span><strong>Pickup map</strong><p>Use your current location to show the pickup point here.</p></div>
+              </div>
+              <a class="map-link" data-open-maps data-location-map-link href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer"><span class="material-icons-round" aria-hidden="true">open_in_new</span>Open location map</a>
+            </aside>
+          </div>
+        </div>
+
+        <div class="pickup-date-block">
+          <div class="subsection-heading"><span class="subsection-number">2</span><div><h3>Pickup Time</h3><p>Pickup starts when you submit. The cutoff is calculated from the earliest item expiry.</p></div></div>
+          <p class="info-strip" data-earliest-deadline role="status">Enter an approximate expiry for at least one item. Pickup closes automatically one hour before the earliest entered expiry.</p>
+          <span class="field-error" data-error-for="pickup.expiry"></span>
+          <div class="automatic-window-grid" aria-label="Automatic pickup window">
+            <div class="automatic-window-card">
+              <span class="material-icons-round automatic-window-icon" aria-hidden="true">schedule</span>
+              <div><strong>Pickup window starts</strong><span data-auto-window-start>Now</span><small>Set to the time you submit the donation.</small></div>
+              <input name="pickup[pickup_start]" type="hidden" value="{{ pickup.pickup_start }}">
+              <span class="field-error" data-error-for="pickup.pickup_start">{{ field_errors.get('pickup.pickup_start', '') }}</span>
+            </div>
+            <div class="automatic-window-card">
+              <span class="material-icons-round automatic-window-icon" aria-hidden="true">event_available</span>
+              <div><strong>Pickup window ends</strong><span data-auto-window-end>Add an approximate expiry in Food Items</span><small>Set automatically to one hour before the earliest item expiry.</small></div>
+              <input name="pickup[pickup_end]" type="hidden" value="{{ pickup.pickup_end }}">
+              <span class="field-error" data-error-for="pickup.pickup_end">{{ field_errors.get('pickup.pickup_end', '') }}</span>
+            </div>
+          </div>
+          <p class="deadline-rule">At least one approximate expiry must be more than one hour away. This preview does not certify food safety; use the food label or storage guidance.</p>
+        </div>
+        <div class="wizard-actions">
+          <button class="button button-muted" type="button" data-prev-step="food">Back</button>
+          <button class="button button-primary" type="button" data-next-step="contact">Next: Contact Info</button>
+        </div>
+      </section>
+
+      <section class="wizard-step panel" data-step-panel="contact" {% if current_step != 'contact' %}hidden{% endif %} aria-labelledby="contact-step-title">
+        <header class="wizard-section-heading"><div><p class="step-kicker">Step 3 of 4</p><h2 id="contact-step-title">Contact Information</h2><p>These details are for pickup coordination.</p></div></header>
+          <label class="profile-toggle"><input type="checkbox" name="contact[use_profile]" value="1" data-use-profile {% if contact.use_profile == '1' %}checked{% endif %}><span><strong>Use my profile contact information</strong><small>Prefill this donation with your saved name, email, and phone.</small></span></label>
+          <p class="profile-unavailable" data-profile-unavailable {% if contact.use_profile != '1' %}hidden{% endif %} role="status">Your saved profile details were copied into the contact fields. You can still edit them for this donation.</p>
+        <div class="contact-form-card">
+          <div class="field" data-field-wrap><label for="contact-name">Contact name <span aria-hidden="true">*</span></label><input id="contact-name" name="contact[contact_name]" data-field="contact.contact_name" type="text" maxlength="120" value="{{ contact.contact_name }}" autocomplete="name" required aria-invalid="{{ 'true' if field_errors.get('contact.contact_name') else 'false' }}"><span class="field-error" data-error-for="contact.contact_name">{{ field_errors.get('contact.contact_name', '') }}</span></div>
+          <div class="field" data-field-wrap><label for="contact-phone">Phone number <span aria-hidden="true">*</span></label><input id="contact-phone" name="contact[phone]" data-field="contact.phone" type="tel" inputmode="tel" maxlength="24" value="{{ contact.phone }}" placeholder="98765 43210" autocomplete="tel-national" required aria-invalid="{{ 'true' if field_errors.get('contact.phone') else 'false' }}"><span class="field-help">Use a reachable number for pickup coordination.</span><span class="field-error" data-error-for="contact.phone">{{ field_errors.get('contact.phone', '') }}</span></div>
+          <div class="field field-full" data-field-wrap><label for="contact-email">Email address <span class="optional">(optional)</span></label><input id="contact-email" name="contact[email]" data-field="contact.email" type="email" maxlength="254" value="{{ contact.email }}" autocomplete="email" placeholder="you@example.com" aria-invalid="{{ 'true' if field_errors.get('contact.email') else 'false' }}"><span class="field-error" data-error-for="contact.email">{{ field_errors.get('contact.email', '') }}</span></div>
+        </div>
+        <label class="save-profile-option"><input type="checkbox" name="contact[save_to_profile]" data-field="contact.save_to_profile" value="1" {% if contact.save_to_profile == '1' %}checked{% endif %}><span><strong>Save the phone number and city to my profile</strong><small>Your sign-in email stays unchanged.</small></span></label>
+          <p class="privacy-note">Contact details are saved with this donation for pickup coordination.</p>
+        <div class="wizard-actions">
+          <button class="button button-muted" type="button" data-prev-step="pickup">Back</button>
+          <button class="button button-primary" type="button" data-next-step="review">Next: Review &amp; Submit</button>
+        </div>
+      </section>
+
+      <section class="wizard-step panel" data-step-panel="review" {% if current_step != 'review' %}hidden{% endif %} aria-labelledby="review-step-title">
+        <header class="wizard-section-heading review-heading"><div><p class="step-kicker">Step 4 of 4</p><h2 id="review-step-title">Review Your Donation</h2><p>Please review all details before submitting. You can return to any step and edit them.</p></div><button type="button" class="button button-outline" data-go-step="food">Edit Details</button></header>
+        <section class="review-section" aria-labelledby="review-items-title">
+          <header><h3 id="review-items-title">Food Items</h3><button type="button" class="text-button" data-go-step="food">Edit</button></header>
+          <div class="review-food-list" data-review-items><p class="review-empty">Your food items will appear here.</p></div>
+        </section>
+        <section class="review-section" aria-labelledby="review-pickup-title">
+          <header><h3 id="review-pickup-title">Pickup Details</h3><button type="button" class="text-button" data-go-step="pickup">Edit</button></header>
+          <div class="review-facts">
+            <div><strong>Pickup Location</strong><p data-review="pickup.location">Not entered</p><p data-review="pickup.coordinates"></p></div>
+            <div><strong>Pickup Time</strong><dl><dt>Earliest item expiry</dt><dd data-review="pickup.expiry">Not entered</dd><dt>Pickup window</dt><dd data-review="pickup.window">Not entered</dd></dl></div>
+          </div>
+        </section>
+        <section class="review-section" aria-labelledby="review-contact-title">
+          <header><h3 id="review-contact-title">Contact Information</h3><button type="button" class="text-button" data-go-step="contact">Edit</button></header>
+          <div class="review-contact-grid"><div><strong>Contact Name</strong><p data-review="contact.contact_name">Not entered</p></div><div><strong>Phone Number</strong><p data-review="contact.phone">Not entered</p></div><div><strong>Email Address</strong><p data-review="contact.email">Not provided</p></div></div>
+        </section>
+        <label class="accuracy-confirmation"><input type="checkbox" name="confirm_accuracy" value="1" data-confirm-accuracy {% if confirm_accuracy %}checked{% endif %} required><span>I confirm that the information is accurate and that the food is safe for consumption.</span></label>
+        <span class="field-error confirmation-error" data-error-for="confirm_accuracy">{{ field_errors.get('confirm_accuracy', '') }}</span>
+        <div class="wizard-actions">
+          <button class="button button-muted" type="button" data-prev-step="contact">Back</button>
+          <button class="button button-primary" type="submit" data-submit-donation>Submit Donation</button>
+        </div>
+      </section>
+    </form>
+
+    <aside class="donation-help-column" aria-label="Donation guidance">
+      <section class="help-card help-tips" data-step-aside="food" {% if current_step != 'food' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">tips_and_updates</span>Tips for a Good Donation</h2>
+        <ul class="icon-list icon-list-check"><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Share fresh, safe-to-eat food.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Provide accurate quantities and timings.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Add a clear pickup location.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Pack food for easy transport.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Avoid expired or spoiled items.</span></li></ul>
+      </section>
+      <section class="help-card help-categories" data-step-aside="food" {% if current_step != 'food' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">restaurant_menu</span>Common Food Categories</h2>
+        {% set category_images = ['category-main-course.png', 'category-snacks.png', 'category-bakery.png', 'category-fruits-vegetables.png', 'category-beverages.png', 'category-dairy.png', 'category-desserts.png', 'category-packaged-foods.png', 'category-other.png'] %}
+        <div class="category-tiles">{% for option in categories %}<span class="category-tile"><img src="{{ url_for('static', filename='images/' ~ (category_images[loop.index0] if loop.index0 < category_images|length else 'category-other.png')) }}" alt="" aria-hidden="true"><small>{{ option }}</small></span>{% endfor %}</div>
+      </section>
+      <section class="help-card help-not-accepted" data-step-aside="food" {% if current_step != 'food' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">block</span>Not Accepted Items</h2>
+        <ul class="icon-list icon-list-stop"><li><span class="material-icons-round" aria-hidden="true">cancel</span><span>Expired or unsafe food</span></li><li><span class="material-icons-round" aria-hidden="true">cancel</span><span>Raw meat, seafood, or eggs</span></li><li><span class="material-icons-round" aria-hidden="true">cancel</span><span>Alcohol or restricted items</span></li><li><span class="material-icons-round" aria-hidden="true">cancel</span><span>Damaged, opened, or spoiled packages</span></li></ul>
+      </section>
+      <section class="help-card help-tips" data-step-aside="pickup" {% if current_step != 'pickup' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">tips_and_updates</span>Tips for a Smooth Pickup</h2>
+        <ul class="icon-list icon-list-check"><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Choose a clear, easy-to-find location.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Mention a nearby landmark.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Set a realistic pickup window.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Keep the contact number available.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Update the address if it changes.</span></li></ul>
+      </section>
+      <section class="help-card help-location" data-step-aside="pickup" {% if current_step != 'pickup' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">location_on</span>Location Guidelines</h2>
+        <ul class="icon-list icon-list-check"><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Provide a complete address.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Prefer public or well-known pickup points.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Choose a safe, accessible place.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Keep exact location details private until needed.</span></li></ul>
+      </section>
+      <section class="help-card help-map" data-step-aside="pickup" {% if current_step != 'pickup' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">map</span>Map preview</h2>
+        <p>The preview helps you check the area. Confirm the exact pickup point in the address above.</p>
+      </section>
+      <section class="help-card help-tips" data-step-aside="contact" {% if current_step != 'contact' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">tips_and_updates</span>Quick Tips</h2>
+        <ul class="icon-list icon-list-check"><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Provide a reachable phone number.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Keep your phone available during pickup.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Add an email only if you want another contact option.</span></li></ul>
+      </section>
+      <section class="help-card help-privacy" data-step-aside="contact" {% if current_step != 'contact' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">shield</span>Privacy &amp; Safety</h2>
+        <p>Contact details are stored with this donation for pickup coordination and are not shown on the public donor listing.</p>
+      </section>
+      <section class="help-card help-review" data-step-aside="review" {% if current_step != 'review' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">task_alt</span>Ready to Review</h2><p>Check every food item, pickup time, and contact detail before submitting.</p>
+      </section>
+      <section class="help-card help-tips" data-step-aside="review" {% if current_step != 'review' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">tips_and_updates</span>Important Reminders</h2>
+        <ul class="icon-list icon-list-check"><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Respect each item's earliest safe deadline.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Keep the pickup location accessible.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Be available during the pickup window.</span></li><li><span class="material-icons-round" aria-hidden="true">check_circle</span><span>Submit only accurate details.</span></li></ul>
+      </section>
+      <section class="help-card help-not-accepted" data-step-aside="review" {% if current_step != 'review' %}hidden{% endif %}>
+        <h2><span class="material-icons-round help-heading-icon" aria-hidden="true">info</span>Submission Status</h2><p>Submitting saves the donation and its food items in MySQL. Uploaded food photos are stored on this app server.</p>
+      </section>
+    </aside>
+  </div>
+  <noscript><p class="form-alert">Enable JavaScript to use the four-step form. Sign in is required, and submitted donations are saved to MySQL.</p></noscript>
+</section>
+{% endblock %}
