@@ -59,9 +59,9 @@ Copy-Item .env.example .env
 
 Set your local MySQL connection values and a long random `PLENTIQ_SECRET_KEY` in `.env`. Do not commit `.env` or share its values. The default database name in the SQL scripts and example is `plentiq_dev`.
 
-### 4. Add the initial accounts (if needed)
+### 4. Add the initial demo accounts (if needed)
 
-`seed_accounts.py` provisions the five starter accounts currently defined in that file. It prompts for each password and stores Werkzeug password hashes. Run it only when those accounts do not already exist:
+`seed_accounts.py` provisions the five demo accounts currently defined in that file. Their names and email addresses are sample identifiers for this project, not production user records. The script prompts for each password and stores Werkzeug password hashes; it does not contain the demo passwords. Run it only when those accounts do not already exist:
 
 ```powershell
 python seed_accounts.py
